@@ -56,14 +56,11 @@ class LoginWindow(QMainWindow):  # Окно входа в аккаунт пап�
             return
         db = sql.connect('DataBases\\ProjectDataBase.sqlite')
         info = {x[0]: x[1] for x in db.execute("""SELECT login, password FROM admins_data""").fetchall()}
-        if login in info:
-            if info[login] == password:  # Запуск окна админa -> MainAdminWindow
-                self.main_admin_window.show()
-                self.close()
-            else:
-                self.statusBar.showMessage('Неверное имя аккаунта или пароль.')
-                self.PasswordLine.setText('')
-        else:
+        try:
+            assert login in info and info[login] == password
+            self.main_admin_window.show()
+            self.close()
+        except AssertionError:
             self.statusBar.showMessage('Неверное имя аккаунта или пароль.')
             self.PasswordLine.setText('')
         db.close()
@@ -97,7 +94,6 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         self.setWindowTitle('Редактировние данных')
         self.setFixedSize(self.size())
 
-        #self.NameLinePageAdd.
         self.genresSelectionWindow.signal.connect(self.add_genres)  # Сигнал на полчение списка с выбранными жанрами
         self.GenresBtnPageAdd.clicked.connect(self.open_genres_window)
 
@@ -233,7 +229,6 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         if not self.NameLinePageAdd.text().strip():
             self.NameLinePageAdd.setStyleSheet('background-color: #ff4b4b')
             return
-        self.NameLinePageAdd.setStyleSheet(f'background-color: {self.normal_color}')
         path_to_image = QFileDialog.getOpenFileName(  # Используется при сохранении фильма
             self, 'Выбрать картинку', '',
             'Изображение (*.jpg);;Изображение (*.jpeg);;Изображение (*.png)')[0]
@@ -249,7 +244,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         # Проверка, подходит ли изображение
         # Соотношение стороно должно быть 7:10 (или близко к этому)
         # И картика должна быть больше или равна по размерам ImageLabel
-        if step + 0.3 > x / y > step - 0.3 and x >= x_size_label and y >= y_size_label:
+        if step + 0.2 > x / y > step - 0.3 and x >= x_size_label and y >= y_size_label:
             image_copy = image.resize((int(x_size_label), int(y_size_label)))
             name = self.transcription_name_into_english(self.NameLinePageAdd.text())
             image_copy.save(f'TemporaryImageStorage\\{name}.png')
@@ -711,6 +706,6 @@ class SessionSetupWindow(QMainWindow):
 if __name__ == '__main__':
     App = QApplication(sys.argv)
     App.setStyle('Fusion')
-    StWin = MainAdminWindow()
+    StWin = StartWindow()
     StWin.show()
     sys.exit(App.exec_())
