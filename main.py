@@ -83,49 +83,49 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         self.projectDB = sql.connect('DataBases\\ProjectDataBase.sqlite')
         self.projectDB_cur = self.projectDB.cursor()
         uic.loadUi('Interfaces\\MainAdminWindowRework.ui', self)
-        self.info_lines = (self.CountryLinePageAdd, self.NameLinePageAdd, self.GenresLinePageAdd)
-        self.info_plain_texts = (self.DirectorsPlainTextPageAdd, self.DescriptionPlainTextPageAdd)
-        self.info_spin_boxes = (self.AgeRatingSpinBoxPageAdd, self.DurationSpinBoxPageAdd)
+        self.info_lines = (self.CountryLineTab0, self.NameLineTab0, self.GenresLineTab0)
+        self.info_plain_texts = (self.DescriptionPlainTextTab0, self.DirectorsPlainTextTab0)
+        self.info_spin_boxes = (self.AgeRatingSpinBoxTab0, self.DurationSpinBoxTab0)
         self.init_add_film_tab_ui()
         self.init_change_film_tab_ui()
         self.init_delete_film_tab_ui()
 
-    def init_add_film_tab_ui(self):  # инициализация для страницы PageAdd
+    def init_add_film_tab_ui(self):  # Инициализация для страницы Tab0
         self.setWindowTitle('Редактировние данных')
         self.setFixedSize(self.size())
 
         self.genresSelectionWindow.signal.connect(self.add_genres)  # Сигнал на полчение списка с выбранными жанрами
-        self.GenresBtnPageAdd.clicked.connect(self.open_genres_window)
+        self.GenresBtnTab0.clicked.connect(self.open_genres_window)
 
         [line.textChanged.connect(self.set_line_text_back_color) for line in self.info_lines + self.info_plain_texts]
 
-        self.LoadImageBtn.clicked.connect(self.get_image)
+        self.LoadImageBtnTab0.clicked.connect(self.get_image)
 
         now_date = date(datetime.now().year, datetime.now().month, datetime.now().day)
         future_date = now_date + timedelta(days=30)
-        self.CalendarPageAdd.setMinimumDate(QDate(now_date.year, now_date.month, now_date.day))  # y-m-d
-        self.CalendarPageAdd.setMaximumDate(QDate(future_date.year, future_date.month, future_date.day))
-        self.CalendarPageAdd.selectionChanged.connect(self.load_sessions)
+        self.CalendarTab0.setMinimumDate(QDate(now_date.year, now_date.month, now_date.day))
+        self.CalendarTab0.setMaximumDate(QDate(future_date.year, future_date.month, future_date.day))
+        self.CalendarTab0.selectionChanged.connect(self.load_sessions)
 
-        self.AddSessionBtnPageAdd.clicked.connect(self.open_add_session_setup_window)
+        self.AddSessionBtnTab0.clicked.connect(self.open_add_session_setup_window)
         self.addSessionSetupWindow.session_signal.connect(self.add_session)
 
         for i in range(2):
-            self.SessionsTableWidgetPageAdd.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-        self.SessionsTableWidgetPageAdd.cellClicked.connect(self.open_change_session_setup_window)
+            self.SessionsTableWidgetTab0.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+        self.SessionsTableWidgetTab0.cellClicked.connect(self.open_change_session_setup_window)
 
-        self.ConfirmFilmInfoBtnPageAdd.clicked.connect(self.confirm_info_press)
+        self.ConfirmFilmInfoBtnTab0.clicked.connect(self.confirm_info_press)
 
-    def init_change_film_tab_ui(self):
+    def init_change_film_tab_ui(self):  # Инициализация для страницы Tab1
         pass
 
-    def init_delete_film_tab_ui(self):
+    def init_delete_film_tab_ui(self):  # Инициализация для страницы Tab2
         pass
 
     def set_line_text_back_color(self):  # Изменение цвета поля при введении текста
         self.sender().setStyleSheet(f'background-color: {self.normal_color}')
-        self.ErrorLabel.setStyleSheet(f'background-color: {self.normal_color}')
-        self.ErrorLabel.setText('')
+        self.ErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
+        self.ErrorLabelTab0.setText('')
 
     def open_genres_window(self):  # Открытие окна для выбора жанров
         self.genresSelectionWindow.show()
@@ -133,30 +133,41 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
     def add_genres(self):  # Получение списка с жанрами
         selected_genres = self.genresSelectionWindow.confirm_genres_press()
         if selected_genres:
-            self.GenresLinePageAdd.setText(', '.join(selected_genres).capitalize())
-            self.genres = selected_genres[:]
+            self.GenresLineTab0.setText(', '.join(selected_genres).capitalize())
+            self.genres = selected_genres.copy()
 
             self.genresSelectionWindow.statusBar.setStyleSheet(f'background-color: {self.normal_color}')
             self.genresSelectionWindow.statusBar.showMessage('')
             self.genresSelectionWindow.close()
         else:
             self.genresSelectionWindow.statusBar.showMessage('Выберите хотя-бы 1 жанр')
-            self.genresSelectionWindow.statusBar.setStyleSheet('background-color: red')
-            self.genresSelectionWindow.statusBar.setStyleSheet('background-color: #f0f0f0')
+            self.genresSelectionWindow.statusBar.setStyleSheet(f'background-color: {self.error_color}')
+
+    def open_add_directors_window(self):  # Открыввется окно для добавления режиссера
+        pass
+
+    def add_director(self):  # Добавление режиссера в список
+        pass
+
+    def open_change_directors_window(self):
+        pass
+
+    def change_directors(self):
+        pass
 
     def open_add_session_setup_window(self):  # Открытие окна, для добавления сеанса
-        selected_date = self.CalendarPageAdd.selectedDate()
+        selected_date = self.CalendarTab0.selectedDate()
         self.addSessionSetupWindow.show()
-        self.SessionsErrorLabel.setText('')
-        self.SessionsErrorLabel.setStyleSheet(f'background-color: {self.normal_color}')
+        self.SessionsErrorLabelTab0.setText('')
+        self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
         try:
             if self.sessions[(selected_date.year(), selected_date.month(), selected_date.day())] == 6:
                 self.addSessionSetupWindow.close()
-        except Exception:
+        except KeyError:
             return
 
     def open_change_session_setup_window(self, row):  # При нажатии на ячейку, открывется окно изменения сеанса
-        selected_date = self.CalendarPageAdd.selectedDate()
+        selected_date = self.CalendarTab0.selectedDate()
         session = self.sessions[(selected_date.year(), selected_date.month(), selected_date.day())][row]
         ses_time, hall = session[:2], session[2]
 
@@ -168,66 +179,69 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         self.changeSessionSetupWindow.show()
 
     def add_session(self):  # Добавление сенса в определенный день (в день максимум 6 сеансов)
-        selected_date = self.CalendarPageAdd.selectedDate()
+        selected_date = self.CalendarTab0.selectedDate()
         year, month, day = selected_date.year(), selected_date.month(), selected_date.day()
-        date1 = (year, month, day)
+        date_ = (year, month, day)
         hour, minute = (self.addSessionSetupWindow.TimeEdit.time().hour(),
                         self.addSessionSetupWindow.TimeEdit.time().minute())
         hall = self.addSessionSetupWindow.SpinBox.value()
 
-        if date1 in self.sessions:  # Добавление сеанса на опредеденный день
-            if len(self.sessions[date1]) in range(6) and [hour, minute, hall] not in self.sessions[date1]:
-                self.sessions[date1].append([hour, minute, hall])
+        if date_ in self.sessions:  # Добавление сеанса на опредеденный день
+            if len(self.sessions[date_]) in range(6) and [hour, minute, hall] not in self.sessions[date_]:
+                self.sessions[date_].append([hour, minute, hall])
             else:
                 self.addSessionSetupWindow.close()
-            self.sessions[date1].sort()
+            self.sessions[date_].sort()
         else:
-            self.sessions[date1] = [[hour, minute, hall]]
+            self.sessions[date_] = [[hour, minute, hall]]
         self.addSessionSetupWindow.close()
         self.load_sessions()
 
     def change_session(self, hour_before, minute_before, hall_before):  # Изменение сеанса в определенный день
-        selected_date = self.CalendarPageAdd.selectedDate()
+        selected_date = self.CalendarTab0.selectedDate()
         year, month, day = selected_date.year(), selected_date.month(), selected_date.day()
-        date1 = (year, month, day)
+        date_ = (year, month, day)
         hour, minute = (self.changeSessionSetupWindow.TimeEdit.time().hour(),
                         self.changeSessionSetupWindow.TimeEdit.time().minute())
         hall = self.changeSessionSetupWindow.SpinBox.value()
 
-        if date1 in self.sessions:  # Изменение сеанса
+        if date_ in self.sessions:  # Изменение сеанса
             try:
-                ind = self.sessions[date1].index([hour_before, minute_before, hall_before])
-                self.sessions[date1][ind] = [hour, minute, hall]
-                self.sessions[date1].sort()
+                ind = self.sessions[date_].index([hour_before, minute_before, hall_before])
+                new_session = [hour, minute, hall]
+
+                if new_session not in self.sessions[date_]:
+                    self.sessions[date_][ind] = [hour, minute, hall]
+                    self.sessions[date_].sort()
             except ValueError:
                 pass
         self.changeSessionSetupWindow.close()
         self.load_sessions()
 
     def load_sessions(self):  # Загрузка сеансов, если они есть в определнггый день
-        selected_date = self.CalendarPageAdd.selectedDate()
+        selected_date = self.CalendarTab0.selectedDate()
         year, month, day = selected_date.year(), selected_date.month(), selected_date.day()
         date1 = (year, month, day)
 
         # Загрузка сеансов
-        self.SessionsTableWidgetPageAdd.clearContents()
-        self.SessionsTableWidgetPageAdd.setRowCount(0)
+        self.SessionsTableWidgetTab0.clearContents()
+        self.SessionsTableWidgetTab0.setRowCount(0)
         if date1 in self.sessions:
-            self.SessionsTableWidgetPageAdd.setRowCount(len(self.sessions[date1]))
+            self.SessionsTableWidgetTab0.setRowCount(len(self.sessions[date1]))
             for row_ind in range(len(self.sessions[date1])):
                 hour, minute, hall = self.sessions[date1][row_ind]
 
                 session_info = [QTableWidgetItem(time(hour, minute, 0).strftime('%H:%M')), QTableWidgetItem(str(hall))]
                 for col_ind in range(len(session_info)):
                     session_info[col_ind].setFlags(session_info[col_ind].flags() ^ Qt.ItemIsEditable)
-                    self.SessionsTableWidgetPageAdd.setItem(row_ind, col_ind, session_info[col_ind])
+                    self.SessionsTableWidgetTab0.setItem(row_ind, col_ind, session_info[col_ind])
 
-        self.SessionsErrorLabel.setText('')
-        self.SessionsErrorLabel.setStyleSheet(f'background-color: {self.normal_color}')
+        self.SessionsErrorLabelTab0.setText('')
+        self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
 
     def get_image(self):  # Получение изображения
-        if not self.NameLinePageAdd.text().strip():
-            self.NameLinePageAdd.setStyleSheet('background-color: #ff4b4b')
+        if not self.NameLineTab0.text().strip():
+            self.NameLineTab0.setStyleSheet('background-color: #ff4b4b')
             return
         path_to_image = QFileDialog.getOpenFileName(  # Используется при сохранении фильма
             self, 'Выбрать картинку', '',
@@ -238,21 +252,22 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
             return
         self.path_to_image = path_to_image
 
-        x_size_label, y_size_label = self.ImageLabel.geometry().width(), self.ImageLabel.geometry().height()
-        step = x_size_label / y_size_label
+        x_size_label, y_size_label = self.ImageLabelTab0.geometry().width(), self.ImageLabelTab0.geometry().height()
+        ratio = x_size_label / y_size_label
         x, y = image.size
+
         # Проверка, подходит ли изображение
         # Соотношение стороно должно быть 7:10 (или близко к этому)
-        # И картика должна быть больше или равна по размерам ImageLabel
-        if step + 0.2 > x / y > step - 0.3 and x >= x_size_label and y >= y_size_label:
+        # И картика должна быть больше или равна по размерам ImageLabelTab0
+        if ratio + 0.2 > x / y > ratio - 0.3 and x >= x_size_label and y >= y_size_label:
             image_copy = image.resize((int(x_size_label), int(y_size_label)))
-            name = self.transcription_name_into_english(self.NameLinePageAdd.text())
+            name = self.transcription_name_into_english(self.NameLineTab0.text())
             image_copy.save(f'TemporaryImageStorage\\{name}.png')
 
-            self.ImageLabel.setPixmap(QPixmap(f'TemporaryImageStorage\\{name}.png'))
-            self.ImageErrorLabel.setText('')
+            self.ImageLabelTab0.setPixmap(QPixmap(f'TemporaryImageStorage\\{name}.png'))
+            self.ImageErrorLabelTab0.setText('')
         else:
-            self.ImageErrorLabel.setText('Изображение не подходит')
+            self.ImageErrorLabelTab0.setText('Изображение не подходит')
 
     def confirm_info_press(self):  # Подтвеждение введенной информации
         if self.info_verification():
@@ -260,6 +275,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
             country, name = ' '.join(country.strip().split()), ' '.join(name.strip().split())
             system_film_name = self.transcription_name_into_english(name)
 
+            # Здесь надо переделать работу с "директорами"
             directors, description = map(lambda plain_text: plain_text.toPlainText().strip(), self.info_plain_texts)
             directors = ', '.join(map(lambda x: x.strip(), directors.split(',')))
             age_rating, duration = map(lambda spin_box: spin_box.value(), self.info_spin_boxes)
@@ -267,8 +283,8 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
             film_names = list(map(lambda x: x[0], self.projectDB_cur.execute(
                 """SELECT file_folder_name FROM Films""").fetchall()))
             if system_film_name in film_names:  # Проверка, есть ли фильм уже в базе
-                self.ErrorLabel.setText('Такой фильм уже есть в базе')
-                self.ErrorLabel.setStyleSheet(f'background-color: {self.error_color}')
+                self.ErrorLabelTab0.setText('Такой фильм уже есть в базе')
+                self.ErrorLabelTab0.setStyleSheet(f'background-color: {self.error_color}')
                 return
 
             # Запись информации о фильме в таблицу
@@ -289,29 +305,26 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
             f'background-color: {self.error_color if not plain_text.toPlainText() else self.normal_color}')
             for plain_text in self.info_plain_texts]
 
-        if not ''.join(self.NameLinePageAdd.text().split()).isalnum():
-            self.NameLinePageAdd.setStyleSheet(f'background-color: {self.error_color}')
-        if not ''.join(self.CountryLinePageAdd.text().split()).isalpha():
-            self.CountryLinePageAdd.setStyleSheet(f'background-color: {self.error_color}')
+        if not ''.join(self.NameLineTab0.text().split()).isalnum():
+            self.NameLineTab0.setStyleSheet(f'background-color: {self.error_color}')
+        if not ''.join(self.CountryLineTab0.text().split()).isalpha():
+            self.CountryLineTab0.setStyleSheet(f'background-color: {self.error_color}')
         if not self.path_to_image:
-            self.ImageErrorLabel.setText('Выберите постера фильма в\nпримерном соотношении сторон 7:10')
+            self.ImageErrorLabelTab0.setText('Выберите постера фильма в\nпримерном соотношении сторон 7:10')
         if not self.sessions:
-            self.SessionsErrorLabel.setText('Добавте хотя-бы 1 сеанс')
-            self.SessionsErrorLabel.setStyleSheet(f'background-color: {self.error_color}')
+            self.SessionsErrorLabelTab0.setText('Добавте хотя-бы 1 сеанс')
+            self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.error_color}')
 
     def info_verification(self):  # Проверка данных
         t1 = all(line.text().strip() for line in self.info_lines)
-        t2 = ''.join(self.NameLinePageAdd.text().split()).isalnum()
-        t3 = ''.join(self.CountryLinePageAdd.text().split()).isalpha()
+        t2 = ''.join(self.NameLineTab0.text().split()).isalnum()
+        t3 = ''.join(self.CountryLineTab0.text().split()).isalpha()
         t4 = all(plain_text.toPlainText().strip() for plain_text in self.info_plain_texts)
         t5 = self.path_to_image and self.sessions
         return all([t1, t2, t3, t4, t5])
 
     # Запись основной информации в базу данных
     def filling_data(self, name, country, directors, age_rating, duration, system_film_name, description):
-        project_db = sql.connect('DataBases\\ProjectDataBase.sqlite')
-        cur = project_db.cursor()
-
         os.mkdir(f'Films\\{system_film_name}')
         description_file_name = f'{system_film_name}Description.txt'
         image_name = f'{system_film_name}.png'
@@ -320,7 +333,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
             description_file.write(description)
 
         im = Image.open(self.path_to_image)
-        im2 = im.resize((self.ImageLabel.geometry().width(), self.ImageLabel.geometry().height()))
+        im2 = im.resize((self.ImageLabelTab0.geometry().width(), self.ImageLabelTab0.geometry().height()))
         im2.save(f'Films\\{system_film_name}\\{image_name}')
 
         self.projectDB_cur.execute("INSERT INTO Films(title, country, directors, rating, duration, file_folder_name,"
@@ -331,10 +344,9 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
 
         film_id = self.projectDB_cur.execute("""SELECT film_id FROM Films WHERE file_folder_name = ?""",
                                              (system_film_name,)).fetchone()[0]
-        project_db.close()
         return film_id
 
-    def filling_genres(self, film_id): # Запись жанров фильма в Films_Genres
+    def filling_genres(self, film_id):  # Запись жанров фильма в Films_Genres
         genres = sorted(list(map(lambda x: self.projectDB_cur.execute("""SELECT genre_id FROM Genres WHERE title = ?""",
                                                                       (x,)).fetchone()[0], self.genres)))
         write_genres = f"INSERT INTO Films_Genres VALUES({film_id}, ?)"
@@ -361,12 +373,15 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         for plaintext in self.info_plain_texts:
             plaintext.setPlainText('')
             plaintext.setStyleSheet(f'background-color: {self.normal_color}')
-        self.SessionsErrorLabel.setText('')
-        self.SessionsErrorLabel.setStyleSheet(f'background-color: {self.normal_color}')
+        self.SessionsErrorLabelTab0.setText('')
+        self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
 
-        self.ImageErrorLabel.setText('')
-        self.ImageErrorLabel.setStyleSheet(f'background-color: {self.normal_color}')
-        self.ImageLabel.clear()
+        self.SessionsTableWidgetTab0.clearContents()
+        self.SessionsTableWidgetTab0.setRowCount(0)
+
+        self.ImageErrorLabelTab0.setText('')
+        self.ImageErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
+        self.ImageLabelTab0.clear()
 
     def clear_all_info(self):  # Очищение всей информации, нужной для работы приложения
         self.path_to_image = ''
@@ -706,6 +721,6 @@ class SessionSetupWindow(QMainWindow):
 if __name__ == '__main__':
     App = QApplication(sys.argv)
     App.setStyle('Fusion')
-    StWin = StartWindow()
+    StWin = MainAdminWindow()
     StWin.show()
     sys.exit(App.exec_())

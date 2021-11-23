@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1096</width>
-    <height>688</height>
+    <height>739</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -37,12 +37,19 @@
       <x>320</x>
       <y>20</y>
       <width>762</width>
-      <height>611</height>
+      <height>671</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="NameLabel1">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Название&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="NameLinePageAdd">
+      <widget class="QLineEdit" name="NameLineTab0">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
@@ -67,7 +74,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="CountryLinePageAdd">
+      <widget class="QLineEdit" name="CountryLineTab0">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
@@ -85,7 +92,7 @@
      <item row="2" column="1">
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
-        <widget class="QLineEdit" name="GenresLinePageAdd">
+        <widget class="QLineEdit" name="GenresLineTab0">
          <property name="font">
           <font>
            <pointsize>12</pointsize>
@@ -97,7 +104,7 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QPushButton" name="GenresBtnPageAdd">
+        <widget class="QPushButton" name="GenresBtnTab0">
          <property name="text">
           <string>Указать</string>
          </property>
@@ -109,27 +116,6 @@
       <widget class="QLabel" name="DirectorsLabel">
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Режиссёр(ы)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QPlainTextEdit" name="DirectorsPlainTextPageAdd">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>40</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>40</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
        </property>
       </widget>
      </item>
@@ -147,7 +133,7 @@
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QSpinBox" name="AgeRatingSpinBoxPageAdd">
+      <widget class="QSpinBox" name="AgeRatingSpinBoxTab0">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
@@ -166,7 +152,7 @@
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="QSpinBox" name="DurationSpinBoxPageAdd">
+      <widget class="QSpinBox" name="DurationSpinBoxTab0">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
@@ -188,7 +174,7 @@
       </widget>
      </item>
      <item row="6" column="1">
-      <widget class="QPlainTextEdit" name="DescriptionPlainTextPageAdd">
+      <widget class="QPlainTextEdit" name="DescriptionPlainTextTab0">
        <property name="minimumSize">
         <size>
          <width>500</width>
@@ -217,7 +203,7 @@
      <item row="7" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QCalendarWidget" name="CalendarPageAdd">
+        <widget class="QCalendarWidget" name="CalendarTab0">
          <property name="minimumDate">
           <date>
            <year>2021</year>
@@ -230,7 +216,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QTableWidget" name="SessionsTableWidgetPageAdd">
+          <widget class="QTableWidget" name="SessionsTableWidgetTab0">
            <property name="minimumSize">
             <size>
              <width>180</width>
@@ -251,7 +237,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="AddSessionBtnPageAdd">
+          <widget class="QPushButton" name="AddSessionBtnTab0">
            <property name="maximumSize">
             <size>
              <width>85</width>
@@ -276,7 +262,7 @@
      <item row="8" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QLabel" name="SessionsErrorLabel">
+        <widget class="QLabel" name="SessionsErrorLabelTab0">
          <property name="font">
           <font>
            <pointsize>12</pointsize>
@@ -288,7 +274,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="ConfirmFilmInfoBtnPageAdd">
+        <widget class="QPushButton" name="ConfirmFilmInfoBtnTab0">
          <property name="minimumSize">
           <size>
            <width>250</width>
@@ -313,15 +299,8 @@
        </item>
       </layout>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="NameLabel1">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Название&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
-     </item>
      <item row="9" column="1">
-      <widget class="QLabel" name="ErrorLabel">
+      <widget class="QLabel" name="ErrorLabelTab0">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
@@ -331,6 +310,71 @@
         <string/>
        </property>
       </widget>
+     </item>
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item alignment="Qt::AlignTop">
+        <widget class="QPlainTextEdit" name="DirectorsPlainTextTab0">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>52</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QPushButton" name="AddDerectorBtnTab0">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Добавть</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="ChangeDerectorsBtnTab0">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Изменить</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -345,7 +389,7 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QLabel" name="ImageLabel">
+      <widget class="QLabel" name="ImageLabelTab0">
        <property name="minimumSize">
         <size>
          <width>280</width>
@@ -367,7 +411,7 @@
       </widget>
      </item>
      <item alignment="Qt::AlignHCenter">
-      <widget class="QPushButton" name="LoadImageBtn">
+      <widget class="QPushButton" name="LoadImageBtnTab0">
        <property name="maximumSize">
         <size>
          <width>279</width>
@@ -385,7 +429,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="ImageErrorLabel">
+      <widget class="QLabel" name="ImageErrorLabelTab0">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
