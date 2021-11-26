@@ -5,7 +5,7 @@ import os
 import os.path
 from PIL import Image
 
-from PyQt5.QtCore import Qt, pyqtSignal, QDate, QTime
+from PyQt5.QtCore import Qt, pyqtSignal, QDate, QTime, QObject
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar, QLineEdit, QTabWidget, QFileDialog
 from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QPixmap
@@ -97,6 +97,10 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         self.genresSelectionWindow.signal.connect(self.add_genres)  # Сигнал на полчение списка с выбранными жанрами
         self.GenresBtnTab0.clicked.connect(self.open_genres_window)
 
+        self.DirectorsTableWidgetTab0.setHorizontalHeaderLabels(["Имя", "Фамилия"])
+        for i in range(self.DirectorsTableWidgetTab0.columnCount()):
+            self.DirectorsTableWidgetTab0.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
         [line.textChanged.connect(self.set_line_text_back_color) for line in self.info_lines + self.info_plain_texts]
 
         self.LoadImageBtnTab0.clicked.connect(self.get_image)
@@ -110,7 +114,8 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         self.AddSessionBtnTab0.clicked.connect(self.open_add_session_setup_window)
         self.addSessionSetupWindow.session_signal.connect(self.add_session)
 
-        for i in range(2):
+        self.SessionsTableWidgetTab0.setHorizontalHeaderLabels(["Время", "Зал"])
+        for i in range(self.SessionsTableWidgetTab0.columnCount()):
             self.SessionsTableWidgetTab0.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
         self.SessionsTableWidgetTab0.cellClicked.connect(self.open_change_session_setup_window)
 
@@ -299,10 +304,10 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
 
     def specifying_invalid_fields(self):  # Указание пустых полей или неправильно заполненных полей
         [line.setStyleSheet(
-            f'background-color: {self.error_color if not line.text() else self.normal_color}')
+            f'background-color: {self.error_color if not line.text().strip() else self.normal_color}')
             for line in self.info_lines]
         [plain_text.setStyleSheet(
-            f'background-color: {self.error_color if not plain_text.toPlainText() else self.normal_color}')
+            f'background-color: {self.error_color if not plain_text.toPlainText().strip() else self.normal_color}')
             for plain_text in self.info_plain_texts]
 
         if not ''.join(self.NameLineTab0.text().split()).isalnum():
@@ -701,26 +706,119 @@ class GenresSelectionWindow(QMainWindow):  # Окно выбора жанров
         return sorted(list(map(lambda i: i.text(), self.GenresListWidget.selectedItems())))
 
 
+class DirectorSetupWindow(QMainWindow):  # Окно для добавления режиссёра
+    def __init__(self):
+        super().__init__()
+        self.error_color = '#ff5133'
+        self.usual_line_color = '#ffffff'
+        self.usual_window_color = '#f0f0f0'
+        self.bool_error_messages = ['Заполните поле с именем', 'Заполните поле с фамилией',
+                                    'Заполните поля с именем и фамилией']
+        self.directorSignal = DirectorSignal()
+        self.statusBar = QStatusBar()
+        uic.loadUi('Interfaces\\DirectorSetupWindow.ui', self)
+        self.lines = (self.NameLine, self.SurnameLine)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setFixedSize(self.size())
+        self.setStatusBar(self.statusBar)
+
+        [line.textChanged.connect(self.set_usual_color) for line in self.lines]
+        self.ConfirmDirectorBtn.clicked.connect(self.confirm_director)
+
+    def set_usual_color(self):  # Изменение цвета поля прия изменении текста в нем
+        self.sender().setStyleSheet(f'background-color: {self.usual_line_color}')
+        self.statusBar.setStyleSheet(f'background-color: {self.usual_window_color}')
+        self.statusBar.showMessage('')
+
+    def confirm_director(self):
+        """
+        При нажатии на кнопку происходит проверка введенных данных.
+        Если не заполнены некоторые поля, то они подсвечиваются.
+        Таже ситуация с неправильно заполненными полями.
+        Если все "ок", то вызывается сигнал, чтоб передать данные в родительское окно.
+        :return: None
+        """
+        if self.indication_empty_lines([i for i in range(len(self.lines))
+                                        if not ' '.join(self.lines[i].text().strip().split())]):
+            return
+
+        flag = True
+        person_info = (' '.join(self.NameLine.text().strip().split()),
+                       ' '.join(self.SurnameLine.text().strip().split()))
+        for i in range(len(self.lines)):
+            if not self.indication_incorrectly_lines(person_info[i]):
+                flag = False
+                self.lines[i].setStyleSheet(f'background-color: {self.error_color}')
+        if flag:
+            self.radiate_signal()
+
+    def indication_empty_lines(self, indexes: list) -> bool:
+        """
+        Подсветка неправильно заполненных полей.
+        :param indexes:
+        :return: bool
+        """
+        if not indexes:
+            return False
+
+        for i in indexes:
+            self.lines[i].setStyleSheet(f'background-color: {self.error_color}')
+            self.lines[i].setText('')
+
+        if len(indexes) == 1:
+            self.statusBar.showMessage(self.bool_error_messages[indexes[0]])
+        else:
+            self.statusBar.showMessage(self.bool_error_messages[2])
+
+        self.statusBar.setStyleSheet(f'background-color: {self.error_color}')
+        return True
+
+    def indication_incorrectly_lines(self, string: str) -> bool:
+        """
+        Проверка, на правильность введенных данных.
+        В строке могут быть только буквы, дефис и пробел.
+        :param string:
+        :return: bool
+        """
+        string = string.strip()
+        if not string:
+            return False
+        return all(i.isalpha() or i == '-' for i in ''.join(string.split()))\
+               and string[0].isalpha() and string[-1].isalpha()
+
+    def radiate_signal(self) -> None:
+        """
+        Излучение сиганала, если все данные введены верно.
+        :return: None
+        """
+        self.directorSignal.signal.emit()
+
+
 class SessionSetupWindow(QMainWindow):
     session_signal = pyqtSignal()
 
-    def __init__(self, window_title):
+    def __init__(self, window_title: str):
         super().__init__()
-        self.window_title = window_title
+        self.setWindowTitle(window_title)
         self.statusBar = QStatusBar()
         uic.loadUi('Interfaces\\SessionSetupWindow.ui', self)
         self.init_ui()
 
     def init_ui(self):
         self.setFixedSize(self.size())
-        self.setWindowTitle(self.window_title)
         self.setStatusBar(self.statusBar)
         self.ConfirmSessionBtn.clicked.connect(self.session_signal)
+
+
+class DirectorSignal(QObject):
+    signal = pyqtSignal()
 
 
 if __name__ == '__main__':
     App = QApplication(sys.argv)
     App.setStyle('Fusion')
-    StWin = MainAdminWindow()
+    StWin = DirectorSetupWindow()
     StWin.show()
     sys.exit(App.exec_())

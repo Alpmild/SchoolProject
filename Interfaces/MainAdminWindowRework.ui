@@ -27,7 +27,7 @@
   <property name="currentIndex">
    <number>0</number>
   </property>
-  <widget class="QWidget" name="AddTab">
+  <widget class="QWidget" name="Tab0">
    <attribute name="title">
     <string>Добавить</string>
    </attribute>
@@ -445,13 +445,33 @@
      </item>
     </layout>
    </widget>
+   <widget class="QTableWidget" name="DirectorsTableWidgetTab0">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>550</y>
+      <width>256</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="columnCount">
+     <number>2</number>
+    </property>
+    <column/>
+    <column/>
+   </widget>
   </widget>
-  <widget class="QWidget" name="ChangeTab">
+  <widget class="QWidget" name="Tab1">
    <attribute name="title">
     <string>Изменить</string>
    </attribute>
   </widget>
-  <widget class="QWidget" name="DeleteTab">
+  <widget class="QWidget" name="Tab2">
    <attribute name="title">
     <string>Удалить</string>
    </attribute>
