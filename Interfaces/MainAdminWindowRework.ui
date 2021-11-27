@@ -337,7 +337,7 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <widget class="QPushButton" name="AddDerectorBtnTab0">
+          <widget class="QPushButton" name="AddDirectorBtnTab0">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -361,7 +361,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="ChangeDerectorsBtnTab0">
+          <widget class="QPushButton" name="ChangeDirectorsBtnTab0">
            <property name="font">
             <font>
              <pointsize>8</pointsize>
