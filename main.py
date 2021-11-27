@@ -665,7 +665,7 @@ class MainFilmWindow(QMainWindow):  # Окно фильма со всей нуж
         self.film_db = sql.connect('DataBases\\ProjectDataBase.sqlite')
         self.film_cur = self.film_db.cursor()
         uic.loadUi('Interfaces\\MainFilmWindow.ui', self)
-        self.infoLines = [self.NameLine, self.CountryLine, self.GenresLine, self.AgeRatingLine, self.DurationLine]
+        self.info_lines = [self.NameLine, self.CountryLine, self.GenresLine, self.AgeRatingLine, self.DurationLine]
         self.session_btns = [self.Session1Btn, self.Session2Btn, self.Session3Btn,
                              self.Session4Btn, self.Session5Btn, self.Session6Btn]
         self.setFixedSize(self.size())
@@ -737,11 +737,11 @@ class MainFilmWindow(QMainWindow):  # Окно фильма со всей нуж
 
     def open_order_menu(self, session_id: int) -> None:  # Открывается окно зала для выбора места
         self.hallWindow = HallWindow(session_id)
-        self.hall_window.show()
+        self.hallWindow.show()
 
     def closeEvent(self, event):
-        if hasattr(self, 'hall_window'):
-            self.hall_window.close()
+        if hasattr(self, 'hallWindow'):
+            self.hallWindow.close()
         self.close()
 
 
@@ -1010,6 +1010,6 @@ class Communicate(QObject):
 if __name__ == '__main__':
     App = QApplication(sys.argv)
     App.setStyle('Fusion')
-    StWin = MainAdminWindow()
+    StWin = MainUserWindow()
     StWin.show()
     sys.exit(App.exec_())
