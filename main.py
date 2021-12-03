@@ -107,6 +107,8 @@ class MainAdminWindow(QTabWidget):
         self.error_color = '#ff5133'
         self.normal_color = '#ffffff'
         self.max_quantity_directors = 6
+        self.right_width, self.right_height = 280, 400
+
         self.path_to_image = ''
         self.genres = []
         self.directors = []
@@ -117,7 +119,7 @@ class MainAdminWindow(QTabWidget):
 
         uic.loadUi('Interfaces\\MainAdminWindowRework.ui', self)
         self.info_lines = (self.CountryLineTab0, self.NameLineTab0, self.GenresLineTab0)
-        self.info_plain_texts = (self.DescriptionPlainTextTab0, self.DirectorsPlainTextTab0)
+        self.info_plain_texts = (self.DescriptionPlainTextTab0,)
         self.info_spin_boxes = (self.AgeRatingSpinBoxTab0, self.DurationSpinBoxTab0)
 
         self.init_tab0_ui()
@@ -215,6 +217,7 @@ class MainAdminWindow(QTabWidget):
         Открыввется окно для добавления режиссера
         :return: None
         """
+        self.DirectorsTableWidgetTab0.setStyleSheet(f'background-color: {self.normal_color}')
         if len(self.directors) in range(self.max_quantity_directors + 1):
             self.addDirectorSetupWindow.show()
         else:
@@ -251,6 +254,7 @@ class MainAdminWindow(QTabWidget):
         Загрузка таблицы с режиссёрами
         :return: None
         """
+        self.DirectorsTableWidgetTab0.setStyleSheet(f'background-color: {self.normal_color}')
         self.DirectorsTableWidgetTab0.clearContents()
         self.DirectorsTableWidgetTab0.setRowCount(len(self.directors))
 
@@ -373,33 +377,27 @@ class MainAdminWindow(QTabWidget):
         Получение изображения
         :return: None
         """
-        if not self.NameLineTab0.text().strip():
-            self.NameLineTab0.setStyleSheet('background-color: #ff4b4b')
-            return
         path_to_image = QFileDialog.getOpenFileName(  # Используется при сохранении фильма
             self, 'Выбрать картинку', '',
             'Изображение (*.jpg);;Изображение (*.jpeg);;Изображение (*.png)')[0]
-        try:
-            image = Image.open(path_to_image)
-        except AttributeError:
+        if not path_to_image:
             return
-        self.path_to_image = path_to_image
 
-        x_size_label, y_size_label = self.ImageLabelTab0.geometry().width(), self.ImageLabelTab0.geometry().height()
-        ratio = x_size_label / y_size_label
-        x, y = image.size
+        self.path_to_image = path_to_image
+        image = QPixmap(self.path_to_image)
+
+        image_label_width, image_label_height = (self.ImageLabelTab0.geometry().width(),
+                                                 self.ImageLabelTab0.geometry().height())
+        w, h = image.width(), image.height()
         # Проверка, подходит ли изображение
         # Соотношение стороно должно быть 7:10 (или близко к этому)
         # И картика должна быть больше или равна по размерам ImageLabelTab0
-        if ratio + 0.2 > x / y > ratio - 0.3 and x >= x_size_label and y >= y_size_label:
-            image_copy = image.resize((int(x_size_label), int(y_size_label)))
-            name = self.transcription_name_into_english(self.NameLineTab0.text())
-            image_copy.save(f'TemporaryImageStorage\\{name}.png')
-
-            self.ImageLabelTab0.setPixmap(QPixmap(f'TemporaryImageStorage\\{name}.png'))
-            self.ImageErrorLabelTab0.setText('')
+        if self.right_width / self.right_height + 0.15 > w / h > self.right_width / self.right_height - 0.15 \
+                and h >= 400 and w >= 280:
+            resized_image = image.scaled(image_label_width, image_label_height)
+            self.ImageLabelTab0.setPixmap(resized_image)
         else:
-            self.ImageErrorLabelTab0.setText('Изображение не подходит')
+            self.ImageErrorLabelTab0.setText('Изображение не подходит.\nСоотношение сторон должно быть\n7:10.')
 
     def confirm_info_press(self) -> None:
         """
@@ -407,27 +405,25 @@ class MainAdminWindow(QTabWidget):
         :return: None
         """
         if self.info_verification():
-            country, name = map(lambda line: line.text().strip(), self.info_lines[:len(self.info_lines) - 1])
-            country, name = ' '.join(country.split()), ' '.join(name.split())
-            system_film_name = self.transcription_name_into_english(name)
+            title = ' '.join(self.NameLineTab0.text().strip().split())
+            country = ' '.join(self.CountryLineTab0.text().strip().split())
+            system_film_name = self.transcription_name_into_english(title)
 
-            # Здесь надо переделать работу с "директорами"
-            directors, description = map(lambda plain_text: plain_text.toPlainText().strip(), self.info_plain_texts)
-            directors = ', '.join(map(lambda x: x.strip(), directors.split(',')))
-            age_rating, duration = map(lambda spin_box: spin_box.value(), self.info_spin_boxes)
-
-            film_names = list(map(lambda x: x[0], self.projectDB_cur.execute(
+            file_folder_names = list(map(lambda x: x[0], self.projectDB_cur.execute(
                 """SELECT file_folder_name FROM Films""").fetchall()))
-            if system_film_name in film_names:  # Проверка, есть ли фильм уже в базе
+            if system_film_name in file_folder_names:  # Проверка, есть ли фильм уже в базе
                 self.ErrorLabelTab0.setText('Такой фильм уже есть в базе')
                 self.ErrorLabelTab0.setStyleSheet(f'background-color: {self.error_color}')
                 return
 
-            # Запись информации о фильме в таблицу
-            film_id = self.filling_data(name, country, directors, age_rating, duration, system_film_name, description)
+            description = self.DescriptionPlainTextTab0.toPlainText()
+            age_rating, duration = map(lambda spin_box: spin_box.value(), self.info_spin_boxes)
+
+            # Запись информации о фильме в таблицы
+            film_id = self.filling_data(title, country, age_rating, duration, system_film_name, description)
             self.filling_genres(film_id)
+            self.filling_directors(film_id)
             self.filling_sessions(film_id)
-            self.clear_all_fields()
             self.clear_all_info()
             self.clear_all_fields()
         else:
@@ -443,42 +439,44 @@ class MainAdminWindow(QTabWidget):
 
         title_isalnum = ''.join(self.NameLineTab0.text().split()).isalnum()
         country_isalpha = ''.join(self.CountryLineTab0.text().split()).isalpha()
-        path_sessions_not_empty = self.path_to_image and self.sessions
-        return all([lines_not_empty, title_isalnum, country_isalpha, plains_not_empty, path_sessions_not_empty])
+
+        path_sessions_directors_not_empty = self.path_to_image and self.sessions and self.directors
+        return all([lines_not_empty, title_isalnum, country_isalpha,
+                    plains_not_empty, path_sessions_directors_not_empty])
 
     def specifying_invalid_fields(self) -> None:
         """
         Указание пустых полей или неправильно заполненных полей
         :return: None
         """
-        [line.setStyleSheet(
-            f'background-color: {self.error_color if not line.text().strip() else self.normal_color}')
-            for line in self.info_lines]
-        [plain_text.setStyleSheet(
-            f'background-color: {self.error_color if not plain_text.toPlainText().strip() else self.normal_color}')
-            for plain_text in self.info_plain_texts]
+        for line in self.info_lines:
+            line.setStyleSheet(
+                f'background-color: {self.error_color if not line.text().strip() else self.normal_color}')
+
+        for plain_text in self.info_plain_texts:
+            plain_text.setStyleSheet(
+                f'background-color: {self.error_color if not plain_text.toPlainText().strip() else self.normal_color}')
 
         if not ''.join(self.NameLineTab0.text().split()).isalnum():
             self.NameLineTab0.setStyleSheet(f'background-color: {self.error_color}')
+
         if not ''.join(self.CountryLineTab0.text().split()).isalpha():
             self.CountryLineTab0.setStyleSheet(f'background-color: {self.error_color}')
+
+        if not self.directors:
+            self.DirectorsTableWidgetTab0.setStyleSheet(f'background-color: {self.error_color}')
+
         if not self.path_to_image:
             self.ImageErrorLabelTab0.setText('Выберите постера фильма в\nпримерном соотношении сторон 7:10')
+
         if not self.sessions:
             self.SessionsErrorLabelTab0.setText('Добавте хотя-бы 1 сеанс')
             self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.error_color}')
 
-    def filling_data(self, name: str, country: str, directors: str, age_rating: int,
+    def filling_data(self, name: str, country: str, age_rating: int,
                      duration: int, system_film_name: str, description: str) -> int:
         """
         Запись основной информации в базу данных
-        :param name:
-        :param country:
-        :param directors:
-        :param age_rating:
-        :param duration:
-        :param system_film_name:
-        :param description:
         :return: int
         """
         os.mkdir(f'Films\\{system_film_name}')
@@ -492,9 +490,9 @@ class MainAdminWindow(QTabWidget):
         im2 = im.resize((self.ImageLabelTab0.geometry().width(), self.ImageLabelTab0.geometry().height()))
         im2.save(f'Films\\{system_film_name}\\{image_name}')
 
-        self.projectDB_cur.execute("INSERT INTO Films(title, country, directors, rating, duration, file_folder_name,"
-                                   " description_file_name, image_name) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-                                   (name, country, directors, age_rating, duration, system_film_name,
+        self.projectDB_cur.execute("INSERT INTO Films(title, country, rating, duration, file_folder_name,"
+                                   " description_file_name, image_name) VALUES(?, ?, ?, ?, ?, ?, ?)",
+                                   (name, country, age_rating, duration, system_film_name,
                                     description_file_name, image_name))
         self.projectDB.commit()
 
@@ -515,6 +513,17 @@ class MainAdminWindow(QTabWidget):
             self.projectDB_cur.execute(write_genres, (genre_id,))
             self.projectDB.commit()
 
+    def filling_directors(self, film_id: int) -> None:
+        """
+        Запись режиссеров фильма в таблицу Films_Directors
+        :param film_id: int
+        :return: None
+        """
+        write_directors = f"INSERT INTO Films_Directors(film_id, name, surname) VALUES({film_id}, ?, ?)"
+        for name, surname in self.directors:
+            self.projectDB_cur.execute(write_directors, (name, surname))
+            self.projectDB.commit()
+
     def filling_sessions(self, film_id: int) -> None:
         """
         Запись сеансов в таблицу Sessions
@@ -525,11 +534,20 @@ class MainAdminWindow(QTabWidget):
         for date1 in dates:
             year, month, day = date1
             sessions = sorted(self.sessions[date1])
-            for ses in sessions:
-                hour, minute, hall = ses
+            for hour, minute, hall in sessions:
                 self.projectDB_cur.execute("""INSERT INTO Sessions(year, month, day, hour, minute, film_id, hall_id) 
                                 VALUES(?, ?, ?, ?, ?, ?, ?)""", (year, month, day, hour, minute, film_id, hall))
                 self.projectDB.commit()
+
+    def clear_all_info(self) -> None:
+        """
+        Очистка всей информации о фильме, записанная внутри класса
+        :return: None
+        """
+        self.path_to_image = ''
+        self.sessions = dict()
+        self.genres.clear()
+        self.directors.clear()
 
     def clear_all_fields(self) -> None:
         """
@@ -542,25 +560,19 @@ class MainAdminWindow(QTabWidget):
         for plaintext in self.info_plain_texts:
             plaintext.setPlainText('')
             plaintext.setStyleSheet(f'background-color: {self.normal_color}')
+
+        self.AgeRatingSpinBoxTab0.setValue(0)
+        self.DurationSpinBoxTab0.setValue(30)
+
+        self.load_directors_table()
+        self.load_sessions_table()
+
         self.SessionsErrorLabelTab0.setText('')
         self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
-
-        self.SessionsTableWidgetTab0.clearContents()
-        self.SessionsTableWidgetTab0.setRowCount(0)
 
         self.ImageErrorLabelTab0.setText('')
         self.ImageErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
         self.ImageLabelTab0.clear()
-
-    def clear_all_info(self) -> None:
-        """
-        Очистка всей информации о фильме, записанная внутри класса
-        :return: None
-        """
-        self.path_to_image = ''
-        self.sessions = dict()
-        self.genres.clear()
-        self.directors.clear()
 
     @staticmethod
     def transcription_name_into_english(name: str) -> str:
@@ -685,15 +697,20 @@ class MainUserWindow(QMainWindow):
             year, month, day = self.Calendar.selectedDate().year(), self.Calendar.selectedDate().month(), \
                                self.Calendar.selectedDate().day()
             film_info = self.films_cur.execute("""SELECT * FROM Films WHERE title = ?""", (item.text(),)).fetchone()
+
             genres = list(map(lambda x: x[0], self.films_cur.execute(
                 """SELECT genre_id FROM Films_Genres WHERE film_id = ?""", (film_info[0],)).fetchall()))
-            genres = list(map(lambda x: self.films_cur.execute("""SELECT title FROM Genres WHERE genre_id = ?""",
+            genres = tuple(map(lambda x: self.films_cur.execute("""SELECT title FROM Genres WHERE genre_id = ?""",
                                                                (x,)).fetchone()[0], genres))
-            sessions = self.films_cur.execute(
-                """SELECT session_id, hour, minute, hall_id FROM Sessions WHERE year = ? AND month = ? and day = ? 
-                and film_id = ?""", (year, month, day, film_info[0])).fetchall()
 
-            self.main_film_window = MainFilmWindow(film_info, genres, sessions)
+            directors = tuple(self.films_cur.execute("""SELECT name, surname FROM Films_Directors WHERE film_id = ?""",
+                                                     (film_info[0],)).fetchall())
+
+            sessions = tuple(self.films_cur.execute(
+                """SELECT session_id, hour, minute, hall_id FROM Sessions WHERE year = ? AND month = ? and day = ? 
+                and film_id = ?""", (year, month, day, film_info[0])).fetchall())
+
+            self.main_film_window = MainFilmWindow(film_info, genres, directors, sessions)
             self.main_film_window.show()
 
     def closeEvent(self, event):
@@ -707,15 +724,19 @@ class MainFilmWindow(QMainWindow):
     """
     Окно фильма со всей нужной информацией для пользователя
     """
-    def __init__(self, film_info, genres, sessions):
+    def __init__(self, film_info: tuple, genres: tuple, directors: tuple, sessions: tuple):
         super().__init__()
         self.film_info = film_info
         self.genres = genres
+        self.directors = directors
         self.sessions = sessions
+
         self.film_db = sql.connect('DataBases\\ProjectDataBase.sqlite')
         self.film_cur = self.film_db.cursor()
+
         uic.loadUi('Interfaces\\MainFilmWindow.ui', self)
-        self.info_lines = [self.NameLine, self.CountryLine, self.GenresLine, self.AgeRatingLine, self.DurationLine]
+        self.info_lines = [self.NameLine, self.CountryLine, self.GenresLine,
+                           self.AgeRatingLine, self.DurationLine]
         self.session_btns = [self.Session1Btn, self.Session2Btn, self.Session3Btn,
                              self.Session4Btn, self.Session5Btn, self.Session6Btn]
         self.setFixedSize(self.size())
@@ -726,10 +747,11 @@ class MainFilmWindow(QMainWindow):
         Загрузка информации о фильме в окно
         :return: None
         """
-        film_id, title, country, directors, rating, duration, file_folder_name, description_file_name, image_name \
+        film_id, title, country, rating, duration, file_folder_name, description_file_name, image_name \
             = self.film_info
         self.setWindowTitle(title)
         genres = ', '.join(self.genres).capitalize()
+        directors = ', '.join(list(map(lambda x: ' '.join(x), self.directors)))
 
         hours_dur, minutes_dur = divmod(duration, 60)
         if hours_dur > 0 and minutes_dur > 0:
@@ -1075,6 +1097,6 @@ class Communicate(QObject):
 if __name__ == '__main__':
     App = QApplication(sys.argv)
     App.setStyle('Fusion')
-    StWin = MainAdminWindow()
+    StWin = MainUserWindow()
     StWin.show()
     sys.exit(App.exec_())

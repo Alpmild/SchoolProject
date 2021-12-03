@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1096</width>
-    <height>739</height>
+    <width>1106</width>
+    <height>740</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -313,25 +313,18 @@
      </item>
      <item row="3" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item alignment="Qt::AlignTop">
-        <widget class="QPlainTextEdit" name="DirectorsPlainTextTab0">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>52</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>40</height>
-          </size>
-         </property>
+       <item>
+        <widget class="QTableWidget" name="DirectorsTableWidgetTab0">
          <property name="font">
           <font>
            <pointsize>12</pointsize>
           </font>
          </property>
+         <property name="columnCount">
+          <number>2</number>
+         </property>
+         <column/>
+         <column/>
         </widget>
        </item>
        <item>
@@ -341,7 +334,7 @@
            <property name="minimumSize">
             <size>
              <width>0</width>
-             <height>0</height>
+             <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
@@ -362,6 +355,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="ChangeDirectorsBtnTab0">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>30</height>
+            </size>
+           </property>
            <property name="font">
             <font>
              <pointsize>8</pointsize>
@@ -398,8 +397,8 @@
        </property>
        <property name="maximumSize">
         <size>
-         <width>280</width>
-         <height>400</height>
+         <width>420</width>
+         <height>600</height>
         </size>
        </property>
        <property name="styleSheet">
@@ -444,26 +443,6 @@
       </widget>
      </item>
     </layout>
-   </widget>
-   <widget class="QTableWidget" name="DirectorsTableWidgetTab0">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>550</y>
-      <width>256</width>
-      <height>91</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="columnCount">
-     <number>2</number>
-    </property>
-    <column/>
-    <column/>
    </widget>
   </widget>
   <widget class="QWidget" name="Tab1">
