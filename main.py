@@ -17,7 +17,10 @@ NORMAL_WINDOW_COLOR = '#f0f0f0'
 ERROR_COLOR = '#ff5133'
 
 
-class StartWindow(QMainWindow):  # Стартовое окно
+class StartWindow(QMainWindow):
+    """
+    Стартовое окно
+    """
     def __init__(self):
         super(QMainWindow, self).__init__()
         uic.loadUi('Interfaces\\StartWindow.ui', self)
@@ -29,18 +32,29 @@ class StartWindow(QMainWindow):  # Стартовое окно
         self.UserLoginBtn.clicked.connect(self.open_user_window)
         self.AdminLoginBtn.clicked.connect(self.open_login_window)
 
-    def open_user_window(self) -> None:  # Человек сразу заходит в приложение и начинает им пользоваться
+    def open_user_window(self) -> None:
+        """
+        Человек сразу заходит в приложение и начинает им пользоваться
+        :return: None
+        """
         self.userWin = MainUserWindow()
         self.userWin.show()
         self.close()
 
-    def open_login_window(self) -> None:  # Открывается окно подтверждения -> LoginWindow
+    def open_login_window(self) -> None:
+        """
+        Открывается окно подтверждения -> LoginWindow
+        :return: None
+        """
         self.lgnWin = LoginWindow()
         self.lgnWin.show()
         self.close()
 
 
-class LoginWindow(QMainWindow):  # Окно входа в аккаунт папы-админа :)
+class LoginWindow(QMainWindow):
+    """
+    Окно входа в аккаунт папы-админа :)
+    """
     def __init__(self):
         super(QMainWindow, self).__init__()
         self.main_admin_window = MainAdminWindow()
@@ -55,7 +69,11 @@ class LoginWindow(QMainWindow):  # Окно входа в аккаунт пап�
         self.CancelBtn.clicked.connect(self.cancel_press)
         self.PasswordLine.setEchoMode(QLineEdit.Password)
 
-    def come_in_press(self) -> None:  # Проверка данных для входа в систему
+    def come_in_press(self) -> None:
+        """
+        Проверка данных для входа в систему
+        :return: None
+        """
         login, password = self.LoginLine.text(), self.PasswordLine.text()
         if not login or not password:
             return
@@ -74,7 +92,10 @@ class LoginWindow(QMainWindow):  # Окно входа в аккаунт пап�
         self.close()
 
 
-class MainAdminWindow(QTabWidget):  # Основное окно админа, где можно добавлять, изменять и удалять фильмы
+class MainAdminWindow(QTabWidget):
+    """
+    Основное окно админа, где можно добавлять, изменять и удалять фильмы
+    """
     def __init__(self):
         super().__init__()
         self.genresSelectionWindow = GenresSelectionWindow()
@@ -85,7 +106,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
 
         self.error_color = '#ff5133'
         self.normal_color = '#ffffff'
-        self.max_quan_directors = 6
+        self.max_quantity_directors = 6
         self.path_to_image = ''
         self.genres = []
         self.directors = []
@@ -115,7 +136,6 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         self.GenresBtnTab0.clicked.connect(self.open_genres_window)
 
         self.AddDirectorBtnTab0.clicked.connect(self.open_add_director_window)
-        self.ChangeDirectorsBtnTab0.clicked.connect(self.open_change_director_window)
         self.addDirectorSetupWindow.communicate.signal.connect(self.add_director)
         self.changeDirectorSetupWindow.communicate.signal.connect(self.change_director)
 
@@ -143,21 +163,41 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
 
         self.ConfirmFilmInfoBtnTab0.clicked.connect(self.confirm_info_press)
 
-    def init_tab1_ui(self) -> None:  # Инициализация для страницы Tab1
+    def init_tab1_ui(self) -> None:
+        """
+        Инициализация для страницы Tab1
+        :return: None
+        """
         pass
 
-    def init_tab2_ui(self) -> None:  # Инициализация для страницы Tab2
+    def init_tab2_ui(self) -> None:
+        """
+        Инициализация для страницы Tab2
+        :return:
+        """
         pass
 
-    def set_line_text_back_color(self) -> None:  # Изменение цвета поля при введении текста
+    def set_line_text_back_color(self) -> None:
+        """
+        Изменение цвета поля при введении текста
+        :return: None
+        """
         self.sender().setStyleSheet(f'background-color: {self.normal_color}')
         self.ErrorLabelTab0.setStyleSheet(f'background-color: {self.normal_color}')
         self.ErrorLabelTab0.setText('')
 
-    def open_genres_window(self) -> None:  # Открытие окна для выбора жанров
+    def open_genres_window(self) -> None:
+        """
+        Открытие окна для выбора жанров
+        :return: None
+        """
         self.genresSelectionWindow.show()
 
-    def add_genres(self) -> None:  # Получение списка с жанрами
+    def add_genres(self) -> None:
+        """
+        Получение списка с жанрами
+        :return: None
+        """
         selected_genres = self.genresSelectionWindow.confirm_genres_press()
         if selected_genres:
             self.GenresLineTab0.setText(', '.join(selected_genres).capitalize())
@@ -175,7 +215,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         Открыввется окно для добавления режиссера
         :return: None
         """
-        if len(self.directors) in range(self.max_quan_directors + 1):
+        if len(self.directors) in range(self.max_quantity_directors + 1):
             self.addDirectorSetupWindow.show()
         else:
             self.addDirectorSetupWindow.close()
@@ -186,7 +226,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         :return: None
         """
         director_info = self.addDirectorSetupWindow.get_director()
-        if director_info not in self.directors and len(self.directors) in range(self.max_quan_directors):
+        if director_info not in self.directors and len(self.directors) in range(self.max_quantity_directors):
             self.directors.append(director_info)
             self.directors.sort()
         self.addDirectorSetupWindow.close()
@@ -220,7 +260,11 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
                 item.setFlags(item.flags() ^ Qt.ItemIsEditable)
                 self.DirectorsTableWidgetTab0.setItem(row_ind, col_ind, item)
 
-    def open_add_session_setup_window(self) -> None:  # Открытие окна, для добавления сеанса
+    def open_add_session_setup_window(self) -> None:
+        """
+        Открытие окна, для добавления сеанса
+        :return: None
+        """
         selected_date = self.CalendarTab0.selectedDate()
         self.addSessionSetupWindow.show()
         self.SessionsErrorLabelTab0.setText('')
@@ -235,7 +279,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         """
         При нажатии на ячейку, открывется окно изменения сеанса
         :param row:
-        :return:
+        :return: None
         """
         selected_date = self.CalendarTab0.selectedDate()
         session = self.sessions[(selected_date.year(), selected_date.month(), selected_date.day())][row]
@@ -344,7 +388,6 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         x_size_label, y_size_label = self.ImageLabelTab0.geometry().width(), self.ImageLabelTab0.geometry().height()
         ratio = x_size_label / y_size_label
         x, y = image.size
-
         # Проверка, подходит ли изображение
         # Соотношение стороно должно быть 7:10 (или близко к этому)
         # И картика должна быть больше или равна по размерам ImageLabelTab0
@@ -365,7 +408,7 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         """
         if self.info_verification():
             country, name = map(lambda line: line.text().strip(), self.info_lines[:len(self.info_lines) - 1])
-            country, name = ' '.join(country.strip().split()), ' '.join(name.strip().split())
+            country, name = ' '.join(country.split()), ' '.join(name.split())
             system_film_name = self.transcription_name_into_english(name)
 
             # Здесь надо переделать работу с "директорами"
@@ -390,6 +433,19 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         else:
             self.specifying_invalid_fields()
 
+    def info_verification(self) -> bool:
+        """
+        Проверка данных
+        :return: bool
+        """
+        lines_not_empty = all(line.text().strip() for line in self.info_lines)
+        plains_not_empty = all(plain_text.toPlainText().strip() for plain_text in self.info_plain_texts)
+
+        title_isalnum = ''.join(self.NameLineTab0.text().split()).isalnum()
+        country_isalpha = ''.join(self.CountryLineTab0.text().split()).isalpha()
+        path_sessions_not_empty = self.path_to_image and self.sessions
+        return all([lines_not_empty, title_isalnum, country_isalpha, plains_not_empty, path_sessions_not_empty])
+
     def specifying_invalid_fields(self) -> None:
         """
         Указание пустых полей или неправильно заполненных полей
@@ -411,18 +467,6 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         if not self.sessions:
             self.SessionsErrorLabelTab0.setText('Добавте хотя-бы 1 сеанс')
             self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.error_color}')
-
-    def info_verification(self) -> bool:
-        """
-        Проверка данных
-        :return: None
-        """
-        t1 = all(line.text().strip() for line in self.info_lines)
-        t2 = ''.join(self.NameLineTab0.text().split()).isalnum()
-        t3 = ''.join(self.CountryLineTab0.text().split()).isalpha()
-        t4 = all(plain_text.toPlainText().strip() for plain_text in self.info_plain_texts)
-        t5 = self.path_to_image and self.sessions
-        return all([t1, t2, t3, t4, t5])
 
     def filling_data(self, name: str, country: str, directors: str, age_rating: int,
                      duration: int, system_film_name: str, description: str) -> int:
@@ -552,7 +596,10 @@ class MainAdminWindow(QTabWidget):  # Основное окно админа, г
         self.close()
 
 
-class MainUserWindow(QMainWindow):  # Основное окно пользователя
+class MainUserWindow(QMainWindow):
+    """
+    Основное окно пользователя
+    """
     def __init__(self):
         super().__init__()
         uic.loadUi('Interfaces\\MainUserWindow.ui', self)
@@ -656,7 +703,10 @@ class MainUserWindow(QMainWindow):  # Основное окно пользова
         self.close()
 
 
-class MainFilmWindow(QMainWindow):  # Окно фильма со всей нужной информацией для пользователя
+class MainFilmWindow(QMainWindow):
+    """
+    Окно фильма со всей нужной информацией для пользователя
+    """
     def __init__(self, film_info, genres, sessions):
         super().__init__()
         self.film_info = film_info
@@ -745,7 +795,10 @@ class MainFilmWindow(QMainWindow):  # Окно фильма со всей нуж
         self.close()
 
 
-class HallWindow(QMainWindow):  # Окно зала, которок получает session_id для записи покупкт билетов
+class HallWindow(QMainWindow):
+    """
+    Окно зала, которое получает session_id для записи покупкт билетов
+    """
     def __init__(self, session_id: int):
         super().__init__()
         self.session_id = session_id
@@ -832,7 +885,10 @@ class HallWindow(QMainWindow):  # Окно зала, которок получа
             self.status_bar.showMessage('Закажите хотя-бы 1 место.')
 
 
-class TabWindow(QMainWindow):  # Окно с кодом заказа
+class TabWindow(QMainWindow):
+    """
+    Окно с кодом заказа
+    """
     def __init__(self, session_id, ordered_places):
         self.session_id = session_id
         self.ordered_places = ordered_places
@@ -849,7 +905,10 @@ class TabWindow(QMainWindow):  # Окно с кодом заказа
                                         f'\nСпасибо за покупку :)')
 
 
-class GenresSelectionWindow(QMainWindow):  # Окно выбора жанров
+class GenresSelectionWindow(QMainWindow):
+    """
+    Окно выбора жанров
+    """
     signal = pyqtSignal()
 
     def __init__(self):
@@ -862,14 +921,14 @@ class GenresSelectionWindow(QMainWindow):  # Окно выбора жанров
         uic.loadUi('Interfaces\\GenreSelectionWindow.ui', self)
         self.init_ui()
 
-    def init_ui(self):
+    def init_ui(self) -> None:
         self.setFixedSize(self.size())
         self.setWindowTitle('Выбор жанров')
         self.setStatusBar(self.statusBar)
         self.ConfirmSelectionBtn.clicked.connect(self.signal)  # Нажатие кнопки создает сигнал
         [self.GenresListWidget.addItem(elem) for elem in self.genres]
 
-    def confirm_genres_press(self):
+    def confirm_genres_press(self) -> list:
         """
         Возвращает список с выбранными жанрами
         :return: list
@@ -877,7 +936,10 @@ class GenresSelectionWindow(QMainWindow):  # Окно выбора жанров
         return sorted(list(map(lambda i: i.text(), self.GenresListWidget.selectedItems())))
 
 
-class DirectorSetupWindow(QMainWindow):  # Окно для добавления режиссёра
+class DirectorSetupWindow(QMainWindow):
+    """
+    Окно для добавления режиссёра
+    """
     def __init__(self, title: str):
         super().__init__()
         self.setWindowTitle(title)
@@ -894,7 +956,7 @@ class DirectorSetupWindow(QMainWindow):  # Окно для добавления 
         self.lines = (self.NameLine, self.SurnameLine)
         self.init_ui()
 
-    def init_ui(self):
+    def init_ui(self) -> None:
         self.setFixedSize(self.size())
         self.setStatusBar(self.statusBar)
 
@@ -988,6 +1050,9 @@ class DirectorSetupWindow(QMainWindow):  # Окно для добавления 
 
 
 class SessionSetupWindow(QMainWindow):
+    """
+    Окно настройки сеанса.
+    """
     session_signal = pyqtSignal()
 
     def __init__(self, window_title: str):
@@ -1010,6 +1075,6 @@ class Communicate(QObject):
 if __name__ == '__main__':
     App = QApplication(sys.argv)
     App.setStyle('Fusion')
-    StWin = MainUserWindow()
+    StWin = MainAdminWindow()
     StWin.show()
     sys.exit(App.exec_())
