@@ -21,7 +21,7 @@ class LoginWindow(QMainWindow):
         uic.loadUi('Interfaces\\LoginWindow.ui', self)
         self.init_ui()
 
-    def init_ui(self) -> None:
+    def init_ui(self):
         self.setFixedSize(self.size())
         self.setWindowTitle('Вход в систему')
 
@@ -32,11 +32,11 @@ class LoginWindow(QMainWindow):
         self.PasswordLine.textChanged.connect(self.hide_error_message)
         self.PasswordLine.setEchoMode(QLineEdit.Password)
 
-    def hide_error_message(self) -> None:
+    def hide_error_message(self):
         self.statusBar.showMessage('')
         self.statusBar.setStyleSheet(f'background-color: {NORMAL_WINDOW_COLOR}')
 
-    def come_in_press(self) -> None:
+    def come_in_press(self):
         """
         Проверка данных для входа в систему
         """
@@ -56,14 +56,14 @@ class LoginWindow(QMainWindow):
             return
         self.open_admin_window()
 
-    def show_error(self) -> None:
+    def show_error(self):
         """
         Показывает сообщение о неправильно введенных данных
         """
         self.statusBar.setStyleSheet(f'background-color: {ERROR_COLOR}')
         self.statusBar.showMessage('Неапрвильно введен логин или пароль.')
 
-    def open_admin_window(self) -> None:
+    def open_admin_window(self):
         """
         Открывается основное окно админа
         """
@@ -71,5 +71,5 @@ class LoginWindow(QMainWindow):
         self.AdminWindow.show()
         self.cancel_press()
 
-    def cancel_press(self) -> None:
+    def cancel_press(self):
         self.close()

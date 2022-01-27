@@ -1,114 +1,108 @@
-from PyQt5.QtWidgets import QMainWindow, QStatusBar
+from PyQt5.QtWidgets import QDialog
 from PyQt5 import uic
 
 from Classes.Communicate import Communicate
 from Classes.Consts import *
 
 
-class DirectorSetupWindow(QMainWindow):
+class DirectorSetupDialog(QDialog):
     """
     Окно для добавления режиссёра
     """
-    def __init__(self, title: str, index=-1, name='', surname=''):
+
+    def __init__(self, parent, tab: int, index=-1, name='', surname=''):
         super().__init__()
-        self.title = title
-        self.ind = index
-        self.ind_ = index
-        self.first_director_info = (name, surname)
+        self.parent = parent
+        self.tab = tab
+        self.index = index
+        self.director_info = (name, surname)
 
         self.error_color = '#ff5133'
         self.normal_line_color = '#ffffff'
         self.normal_window_color = '#f0f0f0'
-        self.bool_error_messages = ['Заполните поле с именем', 'Заполните поле с фамилией',
-                                    'Заполните поля с именем и фамилией']
+        self.error_messages = ['Заполните поле с именем', 'Заполните поле с фамилией',
+                               'Заполните поля с именем и фамилией']
 
         self.communicate = Communicate()
-        self.statusBar = QStatusBar()
-        uic.loadUi('Interfaces\\DirectorSetupWindow.ui', self)
+        uic.loadUi('Interfaces\\DirectorSetupDialog.ui', self)
         self.lines = (self.NameLine, self.SurnameLine)
 
         self.init_ui()
 
-    def init_ui(self) -> None:
+    def init_ui(self):
         self.setFixedSize(self.size())
-        self.setWindowTitle(self.title)
-        self.setStatusBar(self.statusBar)
+        self.setModal(True)
+
+        if self.index != -1:
+            self.setWindowTitle('Изменение режиссера')
 
         for i, line in enumerate(self.lines):
-            line.setText(self.first_director_info[i])
-            line.textChanged.connect(self.set_normal_color)
+            line.setText(self.director_info[i])
+            line.textChanged.connect(self.set_normal_status)
 
-        self.ConfirmDirectorBtn.clicked.connect(self.confirm_director)
+        self.NameLine.textChanged.connect(self.set_btn_status)
+        self.SurnameLine.textChanged.connect(self.set_btn_status)
 
-    def set_normal_color(self) -> None:
-        """
-        Изменение цвета поля прия изменении текста в нем
-        """
-        self.sender().setStyleSheet(f'background-color: {self.normal_line_color}')
-        self.statusBar.setStyleSheet(f'background-color: {self.normal_window_color}')
-        self.statusBar.showMessage('')
+        self.set_btn_status()
+        self.ConfirmDirectorBtn.clicked.connect(self.set_director)
 
-    def confirm_director(self) -> None:
+    def set_btn_status(self):
+        """Установка статуса кнопки: если заролнены оба поля, то кнопку возможно нажать, иначе - нет"""
+        self.ConfirmDirectorBtn.setEnabled(all(line.text().strip() for line in self.lines))
+
+    def set_normal_status(self):
+        """Изменение цвета поля прия изменении текста в нем"""
+
+        self.sender().setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
+        self.StatusBar.setStyleSheet(f'background-color: {NORMAL_WINDOW_COLOR}')
+        self.StatusBar.setText('')
+
+    def set_director(self):
         """
         При нажатии на кнопку происходит проверка введенных данных.
         Если не заполнены некоторые поля, то они подсвечиваются.
         Таже ситуация с неправильно заполненными полями.
         Если все "ок", то вызывается сигнал, чтоб передать данные в родительское окно.
         """
-        indexes = [i for i in range(len(self.lines)) if not ' '.join(self.lines[i].text().strip().split())]
-        if indexes:
-            for i in indexes:
-                self.lines[i].setStyleSheet(f'background-color: {ERROR_COLOR}')
-                self.lines[i].setText('')
-            if len(indexes) == 1:
-                self.statusBar.showMessage(self.bool_error_messages[indexes[0]])
+        mistakes = self.check_mistakes()
+        if mistakes:
+            self.set_incorrectly_lines(mistakes)
+            self.StatusBar.setStyleSheet(f'background-color: {ERROR_COLOR}')
+
+            if len(mistakes) == 2:
+                self.StatusBar.setText(self.error_messages[2])
             else:
-                self.statusBar.showMessage(self.bool_error_messages[2])
-            self.statusBar.setStyleSheet(f'background-color: {ERROR_COLOR}')
+                self.StatusBar.setText(self.error_messages[mistakes[0]])
             return
 
-        flag = True
-        person_info = tuple(' '.join(line.text().strip().split()) for line in self.lines)
-        for i in range(len(person_info)):
-            if not self.indication_incorrectly_lines(person_info[i]):
-                flag = False
-                self.lines[i].setStyleSheet(f'background-color: {ERROR_COLOR}')
+        self.parent.set_director(self.tab, self.index, self.get_director())
+        self.close()
 
-        if flag:
-            self.radiate_signal()
-        else:
-            self.statusBar.setStyleSheet(f'background-color: {ERROR_COLOR}')
-            self.statusBar.showMessage('Некорректно введены данные')
+    def check_mistakes(self) -> list:
+        """Проверка праильности написания имени и фамилии"""
 
-    def indication_incorrectly_lines(self, string: str) -> bool:
-        string = ''.join(string.strip().split())
-        if not string.isalpha():
-            return False
-        return all(ord(i) in range(1040, 1104) for i in string)
+        mistakes = []
+        for ind, line in enumerate(self.lines):
+            text = line.text().strip()
+            if not text:
+                mistakes.append(ind)
+            else:
+                text = text.split()
+                for i in text:
+                    if not i.isalpha():
+                        mistakes.append(ind)
+                        break
+        return mistakes
 
-    def radiate_signal(self) -> None:
-        """
-        Излучение сиганала, если все данные введены верно.
-        """
-        self.communicate.signal.emit()
+    def get_director(self):
+        return tuple(map(lambda l: ' '.join(map(lambda t: t.capitalize(), l.text().split())), self.lines))
 
-    def get_director(self) -> tuple:
-        director_info = tuple(list(map(lambda line: ' '.join(list(map(lambda x: x.capitalize(),
-                                                                      line.text().strip().split()))), self.lines)))
-        if self.ind >= 0:
-            return self.ind, *director_info
-        return director_info
+    def set_incorrectly_lines(self, indexes: list):
+        for i in indexes:
+            self.lines[i].setStyleSheet(f'background-color: {ERROR_COLOR}')
 
-    def clear(self) -> None:
+    def clear(self):
         """
         Очистка всех полей и сообщениый при закрытии окна
         """
-        for line in self.lines:
-            line.setStyleSheet(f'background-color: {self.normal_line_color}')
-            line.setText('')
-        self.statusBar.showMessage('')
-        self.statusBar.setStyleSheet(f'background-color: {self.normal_window_color}')
-
-    def closeEvent(self, event) -> None:
-        self.clear()
-        self.close()
+        pass

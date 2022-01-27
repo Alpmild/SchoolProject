@@ -30,7 +30,7 @@ class FilmWindow(QMainWindow):
         self.setFixedSize(self.size())
         self.load_film_info()
 
-    def load_film_info(self) -> None:
+    def load_film_info(self):
         """
         Загрузка информации о фильме в окно
         """

@@ -12,17 +12,20 @@ FSW_FILMS_TABLE_COLS_SIZE = [80, 200, 100, 100, QHeaderView.Stretch, QHeaderView
                              QHeaderView.Stretch, QHeaderView.Stretch]
 FSW_GENRES_TABLE_COLS_SIZE = [80, QHeaderView.Stretch]
 FSW_DIRECTORS_TABLE_COLS_SIZE = [80, QHeaderView.Stretch, QHeaderView.Stretch]
-FSW_SESSIONS_TABLE_COLS_SIZE = [80, QHeaderView.Stretch, QHeaderView.Stretch]
+FSW_SESSIONS_TABLE_COLS_SIZE = [80, QHeaderView.Stretch, QHeaderView.Stretch, QHeaderView.Stretch]
 
 UW_FILMS_TABLE_COLS_SIZE = [250, 250, QHeaderView.Stretch, QHeaderView.Stretch]
 
 # __________NUMBERS___________
+MAX_DIRECTORS = 6
+MAX_SESSIONS = 10
+
 UW_FILMS_TABLE_COLS_COUNT = 4
 
 FSW_FILMS_TABLE_COLS_COUNT = 8
 FSW_GENRES_TABLE_COLS_COUNT = 2
 FSW_DIRECTORS_TABLE_COLS_COUNT = 3
-FSW_SESSIONS_TABLE_COLS_COUNT = 3
+FSW_SESSIONS_TABLE_COLS_COUNT = 4
 
 # ___________TITLES___________
 UW_FILMS_TABLE_TITLES = ["Называние", "Жанры", "Рейтинг", "Длительность"]
@@ -31,4 +34,4 @@ FSW_FILMS_TABLE_TITLES = ["film_id", "title", "country", "rating", "duration",
                           "file_folder_name", "description_file_name", "image_name"]
 FSW_GENRES_TABLE_TITLES = ["genre_id", "genre_title"]
 FSW_DIRECTORS_TABLE_TITLES = ["director_id", "name", "surname"]
-FSW_SESSIONS_TABLE_TITLES = ["session_id", "date", "time"]
+FSW_SESSIONS_TABLE_TITLES = ["session_id", "date", "time", "hall_id"]

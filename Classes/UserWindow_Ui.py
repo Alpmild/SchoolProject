@@ -22,7 +22,7 @@ class UserWindow(QMainWindow):
         self.projectDB_cur = self.projectDB.cursor()
         self.init_ui()
 
-    def init_ui(self) -> None:
+    def init_ui(self):
         self.setFixedSize(self.size())
         self.setWindowTitle('Выбор фильма')
 
@@ -46,7 +46,7 @@ class UserWindow(QMainWindow):
         self.FilmsTable.cellDoubleClicked.connect(self.open_film_window)
         self.load_table_films()
 
-    def load_table_films(self) -> None:
+    def load_table_films(self):
         """
         Загрузка таблицы в зависимости от даты
         """
@@ -122,7 +122,7 @@ class UserWindow(QMainWindow):
             suitable_films.sort(key=lambda x: x[0])
         return suitable_films
 
-    def open_film_window(self, row_ind: int) -> None:
+    def open_film_window(self, row_ind: int):
         """
         Открытия окна фильма со всей информацией
         """
@@ -133,4 +133,3 @@ class UserWindow(QMainWindow):
         if hasattr(self, 'filmWindow'):
             self.filmWindow.close()
         self.projectDB.close()
-        self.close()

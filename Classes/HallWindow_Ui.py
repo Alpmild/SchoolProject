@@ -46,7 +46,7 @@ class HallWindow(QMainWindow):
                 self.close_the_place(row_ind, col_ind,
                                      (row_ind, col_ind) in purchased_seats)
 
-    def close_the_place(self, row_ind: int, col_ind: int, place_is_taken: bool) -> None:
+    def close_the_place(self, row_ind: int, col_ind: int, place_is_taken: bool):
         """
         Красным закрашивуются уже ранее купленный места, а остальные при нажатие добавляются в заказ
         """
@@ -55,7 +55,7 @@ class HallWindow(QMainWindow):
         else:
             self.place_btns[row_ind][col_ind].clicked.connect(lambda: self.order_place(row_ind, col_ind))
 
-    def order_place(self, row_ind: int, col_ind: int) -> None:
+    def order_place(self, row_ind: int, col_ind: int):
         """
         Добавление заказываемых пользователей мест в список
         """
@@ -68,7 +68,7 @@ class HallWindow(QMainWindow):
         self.ordered_places.sort()
         self.status_bar.showMessage('')
 
-    def buy_tickets(self) -> None:
+    def buy_tickets(self):
         """
         Покупка билетов и добавление заказанных мест в базу
         """

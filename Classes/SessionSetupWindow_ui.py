@@ -1,47 +1,46 @@
-from PyQt5.QtCore import pyqtSignal
+from datetime import date, time
 
+from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import QTime
-from PyQt5.QtWidgets import QMainWindow, QStatusBar
 from PyQt5 import uic
 
 
-class SessionSetupWindow(QMainWindow):
+class SessionSetupDialog(QDialog):
     """
     Окно настройки сеанса.
     """
-    session_signal = pyqtSignal()
 
-    def __init__(self, window_title: str, date_: tuple, index=-1, hour=8, minute=0, hall=1):
-        super().__init__()
-        try:
-            assert all(isinstance(i, int) for i in date_) and len(date_) == 3
-        except AssertionError:
-            raise ValueError('Аргумент date_ должен содержать кортедж с 3 целыми числами: год, месяц, день')
-
-        self.window_title = window_title
+    def __init__(self, parent, tab: int, date_: date, time_=time(8, 0, 0), hall=1, index=-1):
+        super(SessionSetupDialog, self).__init__(parent)
+        self.parent, self.tab = parent, tab
         self.date_ = date_
-        self.ind = index
-        self.hour, self.minute, self.hall = hour, minute, hall
-        self.statusBar = QStatusBar()
+        self.hall, self.time_ = hall, time_
+        self.index = index
 
-        uic.loadUi('Interfaces\\SessionSetupWindow.ui', self)
+        uic.loadUi('Interfaces\\SessionSetupDialog.ui', self)
         self.init_ui()
 
     def init_ui(self):
         self.setFixedSize(self.size())
-        self.setStatusBar(self.statusBar)
-        self.setWindowTitle(self.window_title)
+        self.setModal(True)
 
-        self.TimeEdit.setTime(QTime(self.hour, self.minute))
+        self.TimeEdit.setTime(QTime(self.time_.hour, self.time_.minute))
+        self.TimeEdit.timeChanged.connect(self.set_time)
+
         self.SpinBox.setValue(self.hall)
+        self.SpinBox.valueChanged.connect(self.set_hall)
 
-        self.ConfirmSessionBtn.clicked.connect(self.session_signal)
+        self.ConfirmSessionBtn.clicked.connect(self.set_session)
 
-    def get_session(self):
-        """
-        Возвращает информацию о сеансе
-        """
-        if self.ind >= 0:
-            return self.ind, self.date_,\
-                   [self.TimeEdit.time().hour(), self.TimeEdit.time().minute(), self.SpinBox.value()]
-        return self.date_, [self.TimeEdit.time().hour(), self.TimeEdit.time().minute(), self.SpinBox.value()]
+    def set_hall(self, hall):
+        """Изменение номера зала"""
+        self.hall = hall
+
+    def set_time(self, time_):
+        """Изменение времени сеанса"""
+        self.time_ = time(time_.hour(), time_.minute())
+
+    def set_session(self):
+        """Запись сеанса"""
+        self.parent.set_session(self.tab, self.date_, self.time_, self.hall, self.index)
+        self.close()
