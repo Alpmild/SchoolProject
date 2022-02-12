@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 from Classes.AdminWindow_Ui import AdminWindow
+# from Classes.UserWindow_Ui import UserWindow
 # from Classes.StartWindow_Ui import StartWindow
 
 

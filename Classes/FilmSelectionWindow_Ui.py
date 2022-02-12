@@ -1,5 +1,5 @@
-import sqlite3 as sql
 from datetime import date, time
+from os import getcwd
 from pprint import pprint
 
 from PyQt5.QtCore import Qt
@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QDialog, QTableWidgetItem
 from PyQt5 import uic
 
 from Classes.Consts import *
+import sqlite3 as sql
 
 
 class FilmSelectionDialog(QDialog):
@@ -15,33 +16,49 @@ class FilmSelectionDialog(QDialog):
     def __init__(self, parent):
         super(FilmSelectionDialog, self).__init__(parent)
         self.parent = parent
-        self.current_film = 0
+        self.current_film = -1
 
         self.projectDB = sql.connect('DataBases\\ProjectDataBase.sqlite')
         self.projectDB_cur = self.projectDB.cursor()
 
-        self.films_info = list(map(lambda i: dict(zip(FSW_FILMS_TABLE_TITLES, i)),
+        self.films_info = list(map(lambda i: dict(zip(FILMS_TABLE_KEYS, i)),
                                    self.projectDB_cur.execute("SELECT * FROM Films").fetchall()))
+
+        tickets = set(map(lambda i: i[0], self.projectDB_cur.execute("SELECT session_id FROM Tickets").fetchall()))
+
         for dict_ in self.films_info:
             film_id = dict_["film_id"]
 
-            genres_req = f"SELECT genre_id FROM Films_Genres WHERE film_id = {film_id}"
-            film_genres = list(map(lambda i: i[0], self.projectDB_cur.execute(genres_req).fetchall()))
+            genres_req = "SELECT genre_id FROM Films_Genres WHERE film_id = ?"
+            film_genres = list(map(lambda i: i[0], self.projectDB_cur.execute(genres_req, (film_id,)).fetchall()))
 
-            directors_req = f"SELECT director_id, name, surname FROM Films_Directors WHERE film_id = {film_id}"
-            film_directors = self.projectDB_cur.execute(directors_req).fetchall()
+            directors_req = "SELECT name, surname FROM Films_Directors WHERE film_id = ?"
+            film_directors = self.projectDB_cur.execute(directors_req, (film_id,)).fetchall()
 
-            sessions_req = f"SELECT session_id, year, month, day, hour, minute, hall_id FROM Sessions" \
-                           f" WHERE film_id = ?"
+            sessions_req = "SELECT session_id, year, month, day, hour, minute, hall_id FROM Sessions WHERE film_id = ?"
             sessions = list(map(lambda i: (i[0], date(*i[1:4]), time(*i[4:6]), i[6]),
                                 self.projectDB_cur.execute(sessions_req, (film_id,)).fetchall()))
+
+            with open(dict_["description_file_name"]) as desc_file:
+                description = desc_file.read()
+
             sessions_dict = dict()
+            del_sessions = list()
             for session_id, date_, time_, hall in sessions:
                 if date_ not in sessions_dict:
                     sessions_dict[date_] = []
-                sessions_dict[date_].append((session_id, time_, hall))
+                if session_id not in tickets:
+                    sessions_dict[date_].append((session_id, time_, hall))
+                    del_sessions.append(session_id)
 
-            dict_['genres'], dict_['directors'], dict_["sessions"] = film_genres, film_directors, sessions_dict
+            for date_ in sessions_dict:
+                if not sessions_dict[date_]:
+                    del sessions_dict[date_]
+
+            dict_['genres'], dict_['directors'], dict_['sessions'], dict_['description'] = (film_genres, film_directors,
+                                                                                            sessions_dict, description)
+            dict_["del_sessions"] = del_sessions
+            dict_["image_path"] = f'{getcwd()}\\{dict_["image_path"]}'
 
         uic.loadUi('Interfaces\\FilmSelectionDialog.ui', self)
         self.init_ui()
@@ -63,9 +80,9 @@ class FilmSelectionDialog(QDialog):
             [self.SessionsTable, FSW_SESSIONS_TABLE_COLS_COUNT, FSW_SESSIONS_TABLE_TITLES, FSW_SESSIONS_TABLE_COLS_SIZE]
         ]
 
-        for table, cols_count, titles, cols_size in ws:
+        for table, cols_count, cols_titles, cols_size in ws:
             table.setColumnCount(cols_count)
-            table.setHorizontalHeaderLabels(titles)
+            table.setHorizontalHeaderLabels(cols_titles)
 
             for col, size in enumerate(cols_size):
                 if isinstance(size, QHeaderView.ResizeMode):
@@ -76,7 +93,7 @@ class FilmSelectionDialog(QDialog):
 
         self.FilmsTable.cellClicked.connect(self.load_secondary_tables)
 
-        # self.SelectBtn.clicked.connect()
+        self.SelectBtn.clicked.connect(self.set_film)
         self.CancelBtn.clicked.connect(self.close)
 
     def load_films_table(self):
@@ -90,8 +107,10 @@ class FilmSelectionDialog(QDialog):
                 self.FilmsTable.setItem(row, col, item)
 
     def load_secondary_tables(self, r: int):
-        if r < 0:
+        self.current_film = r
+        if r == -1:
             return
+
         self.load_genres_table(r)
         self.load_directors_table(r)
         self.load_sessions_table(r)
@@ -103,8 +122,7 @@ class FilmSelectionDialog(QDialog):
         self.GenresTable.setRowCount(len(genres))
 
         for row, genre_id in enumerate(genres):
-            str_genre = self.projectDB_cur.execute(
-                f"SELECT title FROM Genres WHERE genre_id = {genre_id}").fetchone()[0]
+            str_genre = GENRES_DICT[genre_id]
 
             for col, elem in enumerate([QTableWidgetItem(str(genre_id)), QTableWidgetItem(str_genre)]):
                 elem.setFlags(elem.flags() ^ Qt.ItemIsEditable)
@@ -125,7 +143,6 @@ class FilmSelectionDialog(QDialog):
     def load_sessions_table(self, r: int):
         """Загрузка сеансов выбранного фильма в таблицу SessionsTable"""
         sessions = self.films_info[r]["sessions"]
-        pprint(sessions)
 
         self.SessionsTable.clearContents()
         self.SessionsTable.setRowCount(len(sessions))
@@ -141,3 +158,8 @@ class FilmSelectionDialog(QDialog):
                         item = QTableWidgetItem(str(elem))
                     item.setFlags(item.flags() ^ Qt.ItemIsEditable)
                     self.SessionsTable.setItem(row, col, item)
+
+    def set_film(self):
+        """Передача словаря с информацией о выбранном фильме"""
+        self.parent.load_film_tab1(self.films_info[self.current_film])
+        self.close()

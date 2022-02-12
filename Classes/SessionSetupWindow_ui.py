@@ -10,12 +10,12 @@ class SessionSetupDialog(QDialog):
     Окно настройки сеанса.
     """
 
-    def __init__(self, parent, tab: int, date_: date, time_=time(8, 0, 0), hall=1, index=-1):
+    def __init__(self, parent, tab: int, date_: date, time_=time(8, 0, 0), hall=1, index=-1, session_id=-1):
         super(SessionSetupDialog, self).__init__(parent)
         self.parent, self.tab = parent, tab
         self.date_ = date_
         self.hall, self.time_ = hall, time_
-        self.index = index
+        self.index, self.session_id = index, session_id
 
         uic.loadUi('Interfaces\\SessionSetupDialog.ui', self)
         self.init_ui()
@@ -42,5 +42,5 @@ class SessionSetupDialog(QDialog):
 
     def set_session(self):
         """Запись сеанса"""
-        self.parent.set_session(self.tab, self.date_, self.time_, self.hall, self.index)
+        self.parent.set_session(self.tab, self.date_, self.time_, self.hall, self.index, self.session_id)
         self.close()

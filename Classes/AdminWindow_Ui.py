@@ -1,7 +1,6 @@
-import sqlite3 as sql
 from datetime import datetime, date, timedelta, time
 import os
-import os.path
+import os.path as os_path
 from PIL import Image
 from pprint import pprint
 
@@ -15,31 +14,23 @@ from Classes.DirectorsSetupWindow_Ui import DirectorSetupDialog
 from Classes.FilmSelectionWindow_Ui import FilmSelectionDialog
 from Classes.GenreSelectionDialog_Ui import GenresSelectionDialog
 from Classes.SessionSetupWindow_Ui import SessionSetupDialog
+from Classes.Secondary_functions import transcription_name_into_english
+
+import sqlite3 as sql
 
 
 class AdminWindow(QTabWidget):
     """Основное окно админа, где можно добавлять, изменять и удалять фильмы"""
-    film_info_tab0 = {"film_id": None, "title": "", "country": "", "genres": [], "rating": 0,
-                      "duration": 30, "description": "", "sessions": dict(), "image_path": ""}
-
-    film_info_tab1 = {"film_id": None, "title": "", "country": "", "genres": [], "rating": 0,
-                      "duration": 30, "description": "", "sessions": dict(),
-                      "file_folder_name": "", "description_file_name": "", "image_path": ""}
 
     def __init__(self):
         super().__init__()
-        self.ERROR_COLOR = '#ff5133'
-        self.NORMAL_COLOR = '#ffffff'
+        self.film_info_tab0, self.film_info_tab1 = FILM_INFO_TAB0.copy(), FILM_INFO_TAB1.copy()
+        self.image_path_tab0, self.image_path_tab1 = '', ''
+        self.genres_tab0, self.genres_tab1 = [], []
+        self.directors_tab0, self.directors_tab1 = [], []
+        self.sessions_tab0, self.sessions_tab1 = dict(), dict()
 
-        self.image_path_tab0 = ''
-        self.genres_tab0 = []
-        self.directors_tab0 = []
-        self.sessions_tab0 = {}
-
-        self.image_path_tab1 = ''
-        self.genres_tab1 = []
-        self.directors_tab1 = []
-        self.sessions_tab1 = {}
+        self.tab1_editable = False
 
         self.projectDB = sql.connect('DataBases\\ProjectDataBase.sqlite')
         self.projectDB_cur = self.projectDB.cursor()
@@ -48,89 +39,92 @@ class AdminWindow(QTabWidget):
         date_tab0 = self.CalendarTab0.selectedDate()
         date_tab1 = self.CalendarTab1.selectedDate()
 
-        self.LinesTab0 = (self.CountryLineTab0, self.NameLineTab0, self.GenresLineTab0)
+        self.LinesTab0 = (self.CountryLineTab0, self.NameLineTab0)
         self.PlainTextsTab0 = (self.DescriptionPlainTextTab0,)
         self.SpinBoxesTab0 = (self.AgeRatingSpinBoxTab0, self.DurationSpinBoxTab0)
         self.selected_date_tab0 = date(date_tab0.year(), date_tab0.month(), date_tab0.day())
 
-        self.LinesTab1 = (self.CountryLineTab1, self.NameLineTab1, self.GenresLineTab1)
+        self.LinesTab1 = (self.CountryLineTab1, self.NameLineTab1)
         self.PlainTextsTab1 = (self.DescriptionPlainTextTab1,)
         self.SpinBoxesTab1 = (self.AgeRatingSpinBoxTab1, self.DurationSpinBoxTab1)
         self.selected_date_tab1 = date(date_tab1.year(), date_tab1.month(), date_tab1.day())
 
-        self.setFixedSize(self.size())
-        self.init_tab0_ui()
-        self.init_tab1_ui()
+        self.init_ui()
+        for tab in range(2):
+            self.init_tab_ui(tab)
         self.init_tab2_ui()
 
-    def init_tab0_ui(self):
-        """Инициализация для вкладки Tab0"""
-
-        self.GenresBtnTab0.clicked.connect(lambda: self.open_genres_dialog(0))
-
-        self.DirectorsTableTab0.setHorizontalHeaderLabels(["Имя", "Фамилия"])
-        for i in range(self.DirectorsTableTab0.columnCount()):
-            self.DirectorsTableTab0.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-        self.AddDirectorBtnTab0.clicked.connect(lambda: self.open_director_setup_dialog(0))
-        self.ChangeDirectorsBtnTab0.clicked.connect(lambda: self.open_director_setup_dialog(0, True))
-        self.DeleteDirectorBtnTab0.clicked.connect(lambda: self.delete_director(0))
-
-        for field in self.LinesTab0 + self.PlainTextsTab0:
-            field.textChanged.connect(lambda: self.set_line_text_back_color(0))
-
-        now_date = date(datetime.now().year, datetime.now().month, datetime.now().day)
-        future_date = now_date + timedelta(days=30)
-        self.CalendarTab0.setMinimumDate(QDate(now_date.year, now_date.month, now_date.day))
-        self.CalendarTab0.setMaximumDate(QDate(future_date.year, future_date.month, future_date.day))
-        self.CalendarTab0.selectionChanged.connect(lambda: (self.set_selected_date(0), self.load_sessions_table(0)))
-
-        self.AddSessionBtnTab0.clicked.connect(lambda: self.open_session_setup_dialog(0))
-        self.ChangeSessionBtnTab0.clicked.connect(lambda: self.open_session_setup_dialog(0, True))
-        self.DeleteSessionBtnTab0.clicked.connect(lambda: self.delete_session(0))
-
-        self.SessionsTableTab0.setHorizontalHeaderLabels(["Время", "Зал"])
-        for i in range(self.SessionsTableTab0.columnCount()):
-            self.SessionsTableTab0.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-        self.LoadImageBtnTab0.clicked.connect(self.load_image)
-        self.DeleteImageBtnTab0.clicked.connect(self.delete_image)
-
-        self.ConfirmFilmInfoBtnTab0.clicked.connect(self.confirm_info_press)
-
-    def init_tab1_ui(self):
-        """
-        Инициализация для вкладки Tab1
-        """
-        #  self.GenresBtnTab1.clicked.connect()
-
-        self.DirectorsTableTab1.setHorizontalHeaderLabels(["Имя", "Фамилия"])
-        for i in range(self.DirectorsTableTab1.columnCount()):
-            self.DirectorsTableTab1.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-        #  self.AddDirectorBtnTab1.clicked.connect()
-        #  self.ChangeDirectorsBtnTab1.clicked.connect()
-        #  self.DeleteDirectorBtnTab1.clicked.connect()
-
-        # for field in self.LinesTab1 + self.PlainTextsTab1:
-        #     field.textChanged.connect(self.set_line_text_back_color)
-
-        now_date = date(datetime.now().year, datetime.now().month, datetime.now().day)
-        future_date = now_date + timedelta(days=30)
-        self.CalendarTab1.setMinimumDate(QDate(now_date.year, now_date.month, now_date.day))
-        self.CalendarTab1.setMaximumDate(QDate(future_date.year, future_date.month, future_date.day))
-        # self.CalendarTab1.selectionChanged.connect(self.load_sessions_table)
-
-        self.SessionsTableTab1.setHorizontalHeaderLabels(["Время", "Зал"])
-        for i in range(self.SessionsTableTab1.columnCount()):
-            self.SessionsTableTab1.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-        #  self.LoadImageBtnTab1.clicked.connect()
-        #  self.DeleteImageBtnTab1.clicked.connect()
-
+    def init_ui(self):
+        self.setFixedSize(self.size())
         self.LoadFilmBtnTab1.clicked.connect(self.open_film_selection_window)
+        self.CancelChangesBtnTab1.clicked.connect(lambda: self.clear_(1))
+        self.set_tab1_edit()
 
-        #  self.ConfirmFilmInfoBtnTab1.clicked.connect()
+    def init_tab_ui(self, tab: int):
+        """Инициализация для вкладки tab"""
+        ws = [
+            [getattr(self, f'GenresTableTab{tab}'), AW_GENRES_TABLE_COLS_COUNT,
+             AW_GENRES_TABLE_COLS_TITLES, AW_GENRES_TABLE_COLS_SIZE],
+            [getattr(self, f'DirectorsTableTab{tab}'), AW_DIRECTORS_TABLE_COLS_COUNT,
+             AW_DIRECTORS_TABLE_COLS_TITLES, AW_DIRECTORS_TABLE_COLS_SIZE],
+            [getattr(self, f'SessionsTableTab{tab}'), AW_SESSIONS_TABLE_COLS_COUNT,
+             AW_SESSIONS_TABLE_COLS_TITLES, AW_SESSIONS_TABLE_COLS_SIZE]
+        ]
+        for table, cols_count, titles, cols_size in ws:
+            table.setColumnCount(cols_count)
+            table.setHorizontalHeaderLabels(titles)
+            for col, size in enumerate(cols_size):
+                if isinstance(size, QHeaderView.ResizeMode):
+                    table.horizontalHeader().setSectionResizeMode(col, size)
+                else:
+                    table.setColumnWidth(col, size)
+                    table.horizontalHeader().setSectionResizeMode(col, QHeaderView.Fixed)
+
+        getattr(self, f'GenresBtnTab{tab}').clicked.connect(lambda: self.open_genres_dialog(tab))
+
+        getattr(self, f'AddDirectorBtnTab{tab}').clicked.connect(lambda: self.open_director_setup_dialog(tab))
+        getattr(self, f'ChangeDirectorsBtnTab{tab}').clicked.connect(
+            lambda: self.open_director_setup_dialog(tab, True))
+        getattr(self, f'DeleteDirectorBtnTab{tab}').clicked.connect(lambda: self.delete_director(tab))
+
+        getattr(self, f'AddSessionBtnTab{tab}').clicked.connect(
+            lambda: self.open_session_setup_dialog(tab))
+        getattr(self, f'ChangeSessionBtnTab{tab}').clicked.connect(
+            lambda: self.open_session_setup_dialog(tab, True))
+        getattr(self, f'DeleteSessionBtnTab{tab}').clicked.connect(
+            lambda: self.delete_session(tab))
+
+        getattr(self, f'LoadImageBtnTab{tab}').clicked.connect(lambda: self.load_image(tab))
+        getattr(self, f'DeleteImageBtnTab{tab}').clicked.connect(lambda: self.delete_image(tab))
+
+        getattr(self, f'ConfirmFilmInfoBtnTab{tab}').clicked.connect(lambda: self.confirm_info_press(tab))
+
+        getattr(self, f'NameLineTab{tab}').textChanged.connect(
+            lambda: self.set_value(tab, 'title', self.NameLineTab0.text()))
+        getattr(self, f'CountryLineTab{tab}').textChanged.connect(
+            lambda: self.set_value(tab, 'country', self.CountryLineTab0.text()))
+        getattr(self, f'AgeRatingSpinBoxTab{tab}').valueChanged.connect(
+            lambda: self.set_value(tab, 'rating', self.AgeRatingSpinBoxTab0.value()))
+        getattr(self, f'DurationSpinBoxTab{tab}').valueChanged.connect(
+            lambda: self.set_value(tab, 'duration', self.DurationSpinBoxTab0.value()))
+        getattr(self, f'DescriptionPlainTextTab{tab}').textChanged.connect(
+            lambda: self.set_value(tab, 'description', self.DescriptionPlainTextTab0.toPlainText()))
+
+        now_date = datetime(datetime.now().year, datetime.now().month, datetime.now().day) + timedelta(days=1)
+        future_date = now_date + timedelta(days=30)
+
+        sel_date = now_date + timedelta(days=1)
+
+        calendar = getattr(self, f'CalendarTab{tab}')
+        calendar.setMinimumDate(QDate(now_date.year, now_date.month, now_date.day))
+        calendar.setMaximumDate(QDate(future_date.year, future_date.month, future_date.day))
+        calendar.setSelectedDate(QDate(sel_date.year, sel_date.month, sel_date.day))
+        calendar.selectionChanged.connect(lambda: (self.set_selected_date(tab), self.load_sessions_table(tab)))
+
+        if tab == 0:
+            self.selected_date_tab0 = sel_date.date()
+        if tab == 1:
+            self.selected_date_tab1 = sel_date.date()
 
     def init_tab2_ui(self):
         """
@@ -138,7 +132,7 @@ class AdminWindow(QTabWidget):
         """
         pass
 
-    def set_line_text_back_color(self, tab: int):
+    def set_value(self, tab: int, key, value):
         """
         Изменение цвета поля при введении текста
         """
@@ -147,69 +141,70 @@ class AdminWindow(QTabWidget):
             self.sender().setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
         if error_label.styleSheet() != NORMAL_LINE_COLOR:
             error_label.clear()
+            error_label.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
 
-    def open_film_selection_window(self):
-        """Открывается окно для выбора фильма на изменение"""
-        film_selection_window = FilmSelectionDialog(self)
-        film_selection_window.show()
+        if isinstance(value, str):
+            value = ' '.join(value.strip().split())
 
-    def set_film_tab1(self):
-        pass
+        getattr(self, f'film_info_tab{tab}')[key] = value
 
     def open_genres_dialog(self, tab: int):
         """
         Открытие диалога для выбора жанров
         """
-        genres_dialog = GenresSelectionDialog(self, tab)
-        genres_dialog.show()
+        getattr(self, f'GenresTableTab{tab}').setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
+
+        if tab == 0 or (tab == 1 and self.tab1_editable):
+            genres_dialog = GenresSelectionDialog(self, tab)
+            genres_dialog.show()
 
     def set_genres(self, genres: list, tab: int):
         """Получение списка с жанрами"""
 
-        if tab == 0:
-            self.genres_tab0 = genres
-        elif tab == 1:
-            self.genres_tab1 = genres
-        else:
-            raise IndexError('Индекс вкладки не соответсвет индексации')
-        str_genres = []
+        getattr(self, f'film_info_tab{tab}')['genres'] = genres
+        self.load_genres_table(tab)
 
-        for genre_id in self.genres_tab0:
-            try:
-                str_genres.append(str(self.projectDB_cur.execute("""SELECT title FROM Genres WHERE genre_id = ?""",
-                                                                 (genre_id,)).fetchone()[0]))
-            except TypeError:
-                continue
+    def load_genres_table(self, tab: int):
+        genres_list = getattr(self, f'film_info_tab{tab}')['genres']
+        genres_table = getattr(self, f'GenresTableTab{tab}')
 
-        getattr(self, f'GenresLineTab{tab}').setText(', '.join(str_genres).capitalize())
-        str_genres.clear()
+        genres_table.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
+        genres_table.clearContents()
+        genres_table.setRowCount(len(genres_list))
+
+        for row, genre_id in enumerate(genres_list):
+            items = (QTableWidgetItem(str(genre_id)), QTableWidgetItem(GENRES_DICT[genre_id]))
+            for col, item in enumerate(items):
+                item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+                genres_table.setItem(row, col, item)
 
     def open_director_setup_dialog(self, tab: int, change=False):
         """
         Открыввется окно для добавления режиссера
         """
         table = getattr(self, f'DirectorsTableTab{tab}')
-        if change:
-            ind = table.currentRow()
-            if ind == -1:
-                return
-            name, surname = getattr(self, f'directors_tab{tab}')[ind]
-            self.director_dialog = DirectorSetupDialog(self, tab, ind, name, surname)
-        else:
-            self.director_dialog = DirectorSetupDialog(self, tab)
+        table.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
 
-        table.setCurrentCell(-1, -1)
-        self.director_dialog.show()
+        if tab == 0 or (tab == 1 and self.tab1_editable):
+            ind = table.currentRow()
+            if change and ind != -1:
+                name, surname = getattr(self, f'film_info_tab{tab}')['directors'][ind]
+                self.director_dialog = DirectorSetupDialog(self, tab, ind, name, surname)
+            else:
+                self.director_dialog = DirectorSetupDialog(self, tab)
+
+            table.setCurrentCell(-1, -1)
+            self.director_dialog.show()
 
     def set_director(self, tab: int, ind: int, director: tuple):
         """
         Добавление режиссера в список, максимум self.MAX_DIRECTORS
         """
-        directors_list = getattr(self, f'directors_tab{tab}')
+        director_list = getattr(self, f'film_info_tab{tab}')['directors']
         if ind != -1:
-            directors_list[ind] = director
+            director_list[ind] = director
         else:
-            directors_list.append(director)
+            director_list.append(director)
 
         self.load_directors_table(tab)
 
@@ -217,7 +212,7 @@ class AdminWindow(QTabWidget):
         """
         Удаление выбранного режиссёра, который человек выбирает в таблице DirectorsTableTab0
         """
-        directors_list = getattr(self, f'directors_tab{tab}')
+        directors_list = getattr(self, f'film_info_tab{tab}')['directors']
         row = getattr(self, f'DirectorsTableTab{tab}').currentRow()
 
         if not directors_list or row == -1:
@@ -231,7 +226,7 @@ class AdminWindow(QTabWidget):
         Загрузка таблицы с режиссёрами
         """
         directors_table = getattr(self, f'DirectorsTableTab{tab}')
-        directors_list = getattr(self, f'directors_tab{tab}')
+        directors_list = getattr(self, f'film_info_tab{tab}')['directors']
 
         directors_table.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
         directors_table.clearContents()
@@ -242,42 +237,57 @@ class AdminWindow(QTabWidget):
                 item = QTableWidgetItem(name)
                 item.setFlags(item.flags() ^ Qt.ItemIsEditable)
                 directors_table.setItem(row, col, item)
-        pprint(getattr(self, f'directors_tab{tab}'))
 
     def open_session_setup_dialog(self, tab: int, change=False):
         """
         Открытие окна, для добавления сеанса
         """
+        selected_date = getattr(self, f'selected_date_tab{tab}')
         table = getattr(self, f'SessionsTableTab{tab}')
-        if change:
+
+        sessions_error_label = getattr(self, f'SessionsErrorLabelTab{tab}')
+        sessions_error_label.setText('')
+        sessions_error_label.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
+
+        if tab == 0 or (tab == 1 and self.tab1_editable):
             row = table.currentRow()
-            if row == -1:
-                return
-            date_ = getattr(self, f'selected_date_tab{tab}')
-            self.session_dialog = SessionSetupDialog(self, tab, date_,
-                                                     *getattr(self, f'sessions_tab{tab}')[date_][row], row)
-        else:
-            self.session_dialog = SessionSetupDialog(self, tab, getattr(self, f'selected_date_tab{tab}'))
 
-        table.setCurrentCell(-1, -1)
-        self.session_dialog.show()
+            if change and row != -1:
+                session = getattr(self, f'film_info_tab{tab}')['sessions'][selected_date][row]
 
-    def set_session(self, tab: int, date_: date, time_: time, hall: int, index: int):
+                if len(session) == 3:
+                    session_id, time_, hall = getattr(self, f'film_info_tab{tab}')['sessions'][selected_date][row]
+                    self.session_dialog = SessionSetupDialog(self, tab, selected_date, time_, hall, row, session_id)
+                else:
+                    time_, hall = getattr(self, f'film_info_tab{tab}')['sessions'][selected_date][row]
+                    self.session_dialog = SessionSetupDialog(self, tab, selected_date, time_, hall, row, -1)
+            else:
+                self.session_dialog = SessionSetupDialog(self, tab, selected_date)
+
+            table.setCurrentCell(-1, -1)
+            self.session_dialog.show()
+
+    def set_session(self, tab: int, date_: date, time_: time, hall: int, index: int, session_id: int):
         """
         Добавление сенса в определенный день
         """
-        sessions = getattr(self, f'sessions_tab{tab}')
+        sessions = getattr(self, f'film_info_tab{tab}')['sessions']
         if index == -1:
             if date_ not in sessions:
                 sessions[date_] = []
-            sessions[date_].append((time_, hall))
+            if session_id == -1:
+                sessions[date_].append((time_, hall))
+            else:
+                sessions[date_].append((session_id, time_, hall))
         else:
-            sessions[date_][index] = (time_, hall)
+            if session_id == -1:
+                sessions[date_][index] = (time_, hall)
+            else:
+                sessions[date_][index] = (session_id, time_, hall)
 
         sessions[date_].sort(key=lambda x: x[0].minute)
         sessions[date_].sort(key=lambda x: x[0].hour)
 
-        pprint(getattr(self, f'sessions_tab{tab}'))
         self.load_sessions_table(tab)
 
     def delete_session(self, tab: int):
@@ -285,25 +295,35 @@ class AdminWindow(QTabWidget):
         Удаление выбранного сеанса, выбранного в таблице
         """
         table = getattr(self, f'SessionsTableTab{tab}')
-        sessions = getattr(self, f'sessions_tab{tab}')
+        sessions = getattr(self, f'film_info_tab{tab}')['sessions']
         selected_date = getattr(self, f'selected_date_tab{tab}')
 
         ind = table.currentRow()
         if ind == -1:
             return
 
-        del sessions[selected_date][ind]
-        table.setCurrentCell(-1, -1)
+        ses = sessions[selected_date].pop(ind)
+        try:
+            deleted_sessions = getattr(self, f'film_info_tab{tab}')['deleted_sessions']
+            if len(ses) == 3:
+                deleted_sessions.append(ses[0])
+        except KeyError:
+            pass
 
+        if not sessions[selected_date]:
+            del sessions[selected_date]
+
+        table.setCurrentCell(-1, -1)
         self.load_sessions_table(tab)
 
-    def load_sessions_table(self, tab=0):
+    def load_sessions_table(self, tab: int):
         """
         Загрузка сеансов, если они есть в определнггый день
         """
-        attrs = ('SessionsTableTab{}', 'selected_date_tab{}', 'sessions_tab{}', 'SessionsErrorLabelTab{}')
-        sessions_table, selected_date, sessions, sessions_error_label = \
+        attrs = ('SessionsTableTab{}', 'selected_date_tab{}', 'SessionsErrorLabelTab{}')
+        sessions_table, selected_date, sessions_error_label = \
             map(lambda i: getattr(self, i.format(tab)), attrs)
+        sessions = getattr(self, f'film_info_tab{tab}')['sessions']
 
         # Загрузка сеансов
         sessions_table.clearContents()
@@ -311,14 +331,18 @@ class AdminWindow(QTabWidget):
 
         if selected_date in sessions:
             sessions_table.setRowCount(len(sessions[selected_date]))
+            sessions = sessions[selected_date]
 
-            for row_ind in range(len(sessions[selected_date])):
-                time_, hall = sessions[selected_date][row_ind]
+            for row, ses in enumerate(sessions):
+                if len(ses) == 3:
+                    time_, hall = ses[1:]
+                else:
+                    time_, hall = ses
                 session_info = [QTableWidgetItem(time_.strftime('%H:%M')), QTableWidgetItem(str(hall))]
 
-                for col_ind in range(len(session_info)):
-                    session_info[col_ind].setFlags(session_info[col_ind].flags() ^ Qt.ItemIsEditable)
-                    sessions_table.setItem(row_ind, col_ind, session_info[col_ind])
+                for col, elem in enumerate(session_info):
+                    elem.setFlags(elem.flags() ^ Qt.ItemIsEditable)
+                    sessions_table.setItem(row, col, elem)
 
         sessions_error_label.setText('')
         sessions_error_label.setStyleSheet(f'background-color: {NORMAL_WINDOW_COLOR}')
@@ -332,227 +356,296 @@ class AdminWindow(QTabWidget):
         else:
             self.selected_date_tab1 = date(selected_date.year(), selected_date.month(), selected_date.day())
 
-    def load_image(self):
+    def load_image(self, tab: int, path_to_image=''):
         """
         Получение изображения
         """
-        self.ImageErrorLabelTab0.clear()
-        path_to_image = QFileDialog.getOpenFileName(  # Используется при сохранении фильма
-            self, 'Выбрать картинку', '',
-            'Изображение (*.jpg);;Изображение (*.jpeg);;Изображение (*.png)')[0]
-        if not path_to_image:
-            return
+        error_label = getattr(self, f'ImageErrorLabelTab{tab}')
+        error_label.clear()
 
-        self.image_path_tab0 = path_to_image
-        image = QPixmap(self.image_path_tab0)
+        if not path_to_image and (tab == 0 or (tab == 1 and self.tab1_editable)):
+            path_to_image = QFileDialog.getOpenFileName(  # Используется при сохранении фильма
+                self, 'Выбрать картинку', '',
+                'Изображение (*.jpg);;Изображение (*.jpeg);;Изображение (*.png)')[0]
+            if not path_to_image:
+                return
 
+            path_to_image = path_to_image.replace('/', '\\')
+            getattr(self, f'film_info_tab{tab}')['image_path'] = path_to_image
+
+        print(path_to_image)
+
+        image = QPixmap(path_to_image)
         image_label_width, image_label_height = (self.ImageLabelTab0.geometry().width(),
                                                  self.ImageLabelTab0.geometry().height())
         w, h = image.width(), image.height()
-        # Проверка, подходит ли изображение
-        # Соотношение стороно должно быть 7:10 (или близко к этому)
-        # И картика должна быть больше или равна по размерам ImageLabelTab0
-        if RIGHT_IMAGE_WIDTH / RIGHT_IMAGE_HEIGHT + 0.15 > w / h > RIGHT_IMAGE_WIDTH / RIGHT_IMAGE_HEIGHT - 0.15 \
-                and h >= 400 and w >= 280:
+
+        if IMAGE_WIDTH / IMAGE_HEIGHT + 0.15 > w / h > IMAGE_WIDTH / IMAGE_HEIGHT - 0.15 \
+                and h >= IMAGE_HEIGHT and w >= IMAGE_WIDTH:
+
             resized_image = image.scaled(image_label_width, image_label_height)
-            self.ImageLabelTab0.setPixmap(resized_image)
+            getattr(self, f'ImageLabelTab{tab}').setPixmap(resized_image)
         else:
-            self.ImageErrorLabelTab0.setText('Изображение не подходит.\n'
-                                             'Соотношение сторон должно быть\n'
-                                             '7:10.')
+            error_label.setText('Изображение не подходит.\n'
+                                'Соотношение сторон должно быть\n'
+                                '7:10.')
 
-    def delete_image(self):
-        """
-        Отмена выбранного изображения
-        """
-        self.image_path_tab0 = ''
-        self.ImageLabelTab0.clear()
+    def delete_image(self, tab: int):
+        """Удаление выбранного изображения"""
+        getattr(self, f'film_info_tab{tab}')['image_path'] = ''
+        getattr(self, f'ImageLabelTab{tab}').clear()
 
-    def confirm_info_press(self):
-        """
-        Подтвеждение введенной информации
-        """
-        if self.info_verification():
-            title = ' '.join(self.NameLineTab0.text().strip().split())
-            country = ' '.join(self.CountryLineTab0.text().strip().split())
-            system_film_name = self.transcription_name_into_english(title)
+    def open_film_selection_window(self):
+        """Открывается окно для выбора фильма на изменение"""
+        film_selection_window = FilmSelectionDialog(self)
+        film_selection_window.show()
 
-            file_folder_names = list(map(lambda x: x[0], self.projectDB_cur.execute(
-                """SELECT file_folder_name FROM Films""").fetchall()))
-            if system_film_name in file_folder_names:  # Проверка, есть ли фильм уже в базе
-                self.ErrorLabelTab0.setText('Такой фильм уже есть в базе')
+    def load_film_tab1(self, film_info: dict):
+        """Загрузка фильма в окне tab1"""
+        self.tab1_editable = True
+        self.film_info_tab1 = film_info
+        title, country, description = film_info['title'], film_info['country'], film_info['description']
+
+        self.set_tab1_edit()
+
+        self.load_genres_table(1)
+        self.load_directors_table(1)
+        self.load_sessions_table(1)
+
+        self.NameLineTab1.setText(film_info['title'])
+        self.CountryLineTab1.setText(film_info['country'])
+        self.DescriptionPlainTextTab1.setPlainText(film_info['description'])
+
+        self.load_image(1, film_info['image_path'])
+
+        film_info['title'], film_info['country'], film_info['description'] = title, country, description
+
+    def set_tab1_edit(self):
+        """Установка возможности редактированимя данных"""
+        edit = not self.tab1_editable
+        for field in self.LinesTab1 + self.SpinBoxesTab1 + self.PlainTextsTab1:
+            field.setReadOnly(edit)
+
+    def confirm_info_press(self, tab: int):
+        """Подтвеждение введенной информации"""
+        if self.info_verification(tab):
+            self.filling_data(tab)
+        else:
+            self.specifying_invalid_fields(tab)
+
+    def info_verification(self, tab: int):
+        """Проверка данных"""
+        film_info = getattr(self, f'film_info_tab{tab}')
+        for key in FILMS_INFO_CHECKED_PARAMS:
+            arg = film_info[key]
+            if type(arg) in (dict, list, tuple) and not arg:
+                return False
+
+        if not (''.join(film_info['title'].split()).isalnum() and ''.join(film_info['country'].split()).isalpha()
+                and film_info['description'] and film_info['image_path']):
+            return False
+
+        return os_path.exists(film_info['image_path'])
+
+    def specifying_invalid_fields(self, tab: int):
+        """Указание пустых или неправильно заполненных полей """
+        film_info = getattr(self, f'film_info_tab{tab}')
+
+        name_line = getattr(self, f'NameLineTab{tab}')
+        country_line = getattr(self, f'CountryLineTab{tab}')
+        genres_table = getattr(self, f'GenresTableTab{tab}')
+        directors_table = getattr(self, f'DirectorsTableTab{tab}')
+        description_plaintext = getattr(self, f'DescriptionPlainTextTab{tab}')
+        sessions_error_label = getattr(self, f'SessionsErrorLabelTab{tab}')
+        image_error_label = getattr(self, f'ImageErrorLabelTab{tab}')
+
+        if not ''.join(film_info['title'].split()).isalnum():
+            name_line.setStyleSheet(f'background-color: {ERROR_COLOR}')
+
+        if not ''.join(film_info['country'].split()).isalpha():
+            country_line.setStyleSheet(f'background-color: {ERROR_COLOR}')
+
+        if not film_info['genres']:
+            genres_table.setStyleSheet(f'background-color: {ERROR_COLOR}')
+
+        if not film_info['directors']:
+            directors_table.setStyleSheet(f'background-color: {ERROR_COLOR}')
+
+        if not film_info['description']:
+            description_plaintext.setStyleSheet(f'background-color: {ERROR_COLOR}')
+
+        if not film_info['sessions']:
+            sessions_error_label.setStyleSheet(f'background-color: {ERROR_COLOR}')
+            sessions_error_label.setText('Добавте хотя бы 1 сеанс')
+
+        if not os_path.exists(film_info['image_path']):
+            self.delete_image(tab)
+            getattr(self, f'ImageLabelTab{tab}').clear()
+
+        if not film_info['image_path']:
+            image_error_label.setText('Выберите постера фильма в\n'
+                                      'примерном соотношении сторон 7:10')
+
+    def filling_data(self, tab: int):
+        """Запись основной информации в базу данных"""
+        film_info = getattr(self, f'film_info_tab{tab}')
+
+        title, country, rating, duration, image_path = \
+            (film_info['title'], film_info['country'], film_info['rating'],
+             film_info['duration'], film_info['image_path'])
+
+        file_folder_name = transcription_name_into_english(film_info['title'])
+        description_file_name, image_name = (f'Films\\{file_folder_name}\\{file_folder_name}Description.txt',
+                                             f'Films\\{file_folder_name}\\{file_folder_name}Image.png')
+
+        if tab == 0:
+
+            if (file_folder_name,) in self.projectDB_cur.execute('SELECT file_folder_name FROM Films').fetchall():
+                self.ErrorLabelTab0.setText('Этот фильм уже есть в базе.')
                 self.ErrorLabelTab0.setStyleSheet(f'background-color: {ERROR_COLOR}')
                 return
 
-            description = self.DescriptionPlainTextTab0.toPlainText()
-            age_rating, duration = map(lambda spin_box: spin_box.value(), self.SpinBoxesTab0)
+            # Создание папки
+            os.mkdir(f'Films\\{file_folder_name}')
 
-            # Запись информации о фильме в таблицы
-            film_id = self.filling_data(title, country, age_rating, duration, system_film_name, description)
-            self.filling_genres(film_id)
-            self.filling_directors(film_id)
-            self.filling_sessions(film_id)
-            self.clear_info()
-            self.clear_fields()
-        else:
-            self.specifying_invalid_fields()
+            # Запись описания в текстовый файл
+            with open(description_file_name, 'w') as description_file:
+                description_file.write(film_info['description'])
 
-    def info_verification(self):
-        """
-        Проверка данных
-        """
-        lines_not_empty = all(line.text().strip() for line in self.LinesTab0)
-        plains_not_empty = all(plain_text.toPlainText().strip() for plain_text in self.PlainTextsTab0)
+            # Сохранение постера фильма
+            image = Image.open(image_path)
+            new_image = image.resize((IMAGE_WIDTH, IMAGE_HEIGHT))
+            new_image.save(image_name)
 
-        title_isalnum = ''.join(self.NameLineTab0.text().split()).isalnum()
-        country_isalpha = ''.join(self.CountryLineTab0.text().split()).isalpha()
+            # Запись информации в бд
+            self.projectDB_cur.execute(
+                "INSERT INTO "
+                "Films(title, country, rating, duration, file_folder_name, description_file_name, image_name) "
+                "VALUES(?, ?, ?, ?, ?, ?, ?)",
+                (title, country, rating, duration, file_folder_name, description_file_name, image_name))
 
-        image_path_not_empty = self.image_path_tab0 and self.sessions_tab0 and self.directors_tab0
-        return all([lines_not_empty, title_isalnum, country_isalpha,
-                    plains_not_empty, image_path_not_empty])
-
-    def specifying_invalid_fields(self):
-        """
-        Указание пустых полей или неправильно заполненных полей
-        """
-        for line in self.LinesTab0:
-            line.setStyleSheet(
-                f'background-color: {ERROR_COLOR if not line.text().strip() else NORMAL_LINE_COLOR}')
-
-        for plain_text in self.PlainTextsTab0:
-            plain_text.setStyleSheet(
-                f'background-color: {ERROR_COLOR if not plain_text.toPlainText().strip() else NORMAL_LINE_COLOR}')
-
-        if not ''.join(self.NameLineTab0.text().split()).isalnum():
-            self.NameLineTab0.setStyleSheet(f'background-color: {ERROR_COLOR}')
-
-        if not ''.join(self.CountryLineTab0.text().split()).isalpha():
-            self.CountryLineTab0.setStyleSheet(f'background-color: {ERROR_COLOR}')
-
-        if not self.directors_tab0:
-            self.DirectorsTableTab0.setStyleSheet(f'background-color: {ERROR_COLOR}')
-
-        if not self.image_path_tab0:
-            self.ImageErrorLabelTab0.setText('Выберите постера фильма в\nпримерном соотношении сторон 7:10')
-
-        if not self.sessions_tab0:
-            self.SessionsErrorLabelTab0.setText('Добавте хотя-бы 1 сеанс')
-            self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {ERROR_COLOR}')
-
-    def filling_data(self, name: str, country: str, age_rating: int,
-                     duration: int, system_film_name: str, description: str):
-        """
-        Запись основной информации в базу данных
-        """
-        os.mkdir(f'Films\\{system_film_name}')
-        description_file_name = f'{system_film_name}Description.txt'
-        image_name = f'{system_film_name}.png'
-
-        with open(f'Films\\{system_film_name}\\{description_file_name}', 'w') as description_file:
-            description_file.write(description)
-
-        im = Image.open(self.image_path_tab0)
-        im2 = im.resize((self.ImageLabelTab0.geometry().width(), self.ImageLabelTab0.geometry().height()))
-        im2.save(f'Films\\{system_film_name}\\{image_name}')
-
-        self.projectDB_cur.execute("INSERT INTO Films(title, country, rating, duration, file_folder_name,"
-                                   " description_file_name, image_name) VALUES(?, ?, ?, ?, ?, ?, ?)",
-                                   (name, country, age_rating, duration, system_film_name,
-                                    description_file_name, image_name))
-        self.projectDB.commit()
-
-        film_id = self.projectDB_cur.execute("""SELECT film_id FROM Films WHERE file_folder_name = ?""",
-                                             (system_film_name,)).fetchone()[0]
-        return film_id
-
-    def filling_genres(self, film_id: int):
-        """
-        Запись жанров фильма в таблицу Films_Genres.
-        """
-        write_genres = f"INSERT INTO Films_Genres VALUES({film_id}, ?)"
-        for genre_id in self.genres_tab0:
-            self.projectDB_cur.execute(write_genres, (genre_id,))
             self.projectDB.commit()
 
-    def filling_directors(self, film_id: int):
-        """
-        Запись режиссеров фильма в таблицу Films_Directors
-        """
-        write_directors = f"INSERT INTO Films_Directors(film_id, name, surname) VALUES({film_id}, ?, ?)"
-        for name, surname in self.directors_tab0:
-            self.projectDB_cur.execute(write_directors, (name, surname))
+            film_id = self.projectDB_cur.execute("SELECT film_id FROM Films"
+                                                 "    WHERE file_folder_name = ?", (file_folder_name,)).fetchone()[0]
+
+            genres, directors, sessions = film_info['genres'], film_info['directors'], film_info['sessions']
+
+            self.filling_genres(film_id, genres, tab)
+            self.filling_directors(film_id, directors, tab)
+            self.filling_sessions(film_id, sessions, [])
+            self.clear_(tab)
+
+        elif tab == 1:
+            film_id = film_info['film_id']
+
+            last_file_folder_name, last_description_file_name, last_image_name = \
+                self.projectDB_cur.execute(
+                    "SELECT file_folder_name, description_file_name, image_name FROM Films"
+                    "    WHERE film_id = ?",
+                    (film_id,)).fetchone()
+
+            # Запись описания в текстовый файл
+            if file_folder_name != last_file_folder_name:
+                os.rename(last_description_file_name, description_file_name)
+            with open(description_file_name, 'w') as description_file:
+                description_file.write(film_info['description'])
+
+            # Сохранение изображения
+            if image_path in (last_image_name, f'{os.getcwd()}\\{last_image_name}'):
+                os.rename(image_path, image_name)
+            else:
+                image = Image.open(image_path)
+                new_image = image.resize((IMAGE_WIDTH, IMAGE_HEIGHT))
+                new_image.save(f'Films\\{last_file_folder_name}\\{file_folder_name}Image.png')
+
+            if last_file_folder_name != file_folder_name:
+                os.rename(last_file_folder_name, file_folder_name)
+
+            self.projectDB_cur.execute("UPDATE FILMS"
+                                       "SET title = ?,"
+                                       "    country = ?,"
+                                       "    rating = ?,"
+                                       "    duration = ?,"
+                                       "    file_folder_name = ?,"
+                                       "    description_file_name = ?,"
+                                       "    image_name = ?"
+                                       "WHERE"
+                                       "    film_id = ?",
+                                       (title, country, rating, duration, file_folder_name,
+                                        description_file_name, image_name, film_id))
             self.projectDB.commit()
 
-    def filling_sessions(self, film_id: int):
-        """
-        Запись сеансов в таблицу Sessions
-        """
-        dates = sorted(self.sessions_tab0.keys())
-        for date_ in dates:
+    def filling_genres(self, film_id: int, genres: list, tab: int):
+        """Запись жанров фильма в таблицу Films_Genres."""
+        if tab == 1:
+            self.projectDB_cur.execute("DELETE FROM Films_Genres WHERE film_id = ?", (film_id,))
+
+        for genre_id in genres:
+            self.projectDB_cur.execute("INSERT INTO Films_Genres VALUES (?, ?)", (film_id, genre_id))
+            self.projectDB.commit()
+
+    def filling_directors(self, film_id: int, directors: list, tab: int):
+        """Запись режиссеров фильма в таблицу Films_Directors"""
+        if tab == 1:
+            self.projectDB_cur.execute("DELETE FROM Films_Directors WHERE film_id = ?", (film_id,))
+            self.projectDB.commit()
+
+        for name, surname in directors:
+            self.projectDB_cur.execute("INSERT INTO Films_Directors VALUES(?, ?, ?)", (film_id, name, surname))
+            self.projectDB.commit()
+
+    def filling_sessions(self, film_id: int, sessions: dict, del_sessions: list):
+        """Запись сеансов в таблицу Sessions"""
+        for ses_id in del_sessions:
+            self.projectDB_cur.execute("DELETE FROM Sessions WHERE session_id = ?", (ses_id,))
+
+        for date_ in sessions:
             year, month, day = date_.year, date_.month, date_.day
-            sessions = sorted(self.sessions_tab0[date_])
-            for time_, hall in sessions:
-                hour, minute = time_.hour, time_.minute
 
-                self.projectDB_cur.execute("""INSERT INTO Sessions(year, month, day, hour, minute, film_id, hall_id) 
-                                VALUES(?, ?, ?, ?, ?, ?, ?)""", (year, month, day, hour, minute, film_id, hall))
+            for ses in sessions[date_]:
+                if len(ses) == 3:
+                    ses_id, time_, hall = ses
+                    hour, minute = time_.hour, time_.minute
+
+                    self.projectDB_cur.execute("INSERT INTO Sessions VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                                               (film_id, ses_id, year, month, day, hour, minute, hall))
+                else:
+                    time_, hall = ses
+                    hour, minute = time_.hour, time_.minute
+
+                    self.projectDB_cur.execute("INSERT INTO Sessions(film_id, year, month, day, hour, minute, hall_id) "
+                                               "VALUES(?, ?, ?, ?, ?, ?, ?)",
+                                               (film_id, year, month, day, hour, minute, hall))
                 self.projectDB.commit()
 
-    def clear_info(self):
-        """
-        Очистка всей информации о фильме, записанная внутри класса
-        """
-        self.image_path_tab0 = ''
-        self.sessions_tab0 = dict()
-        self.genres_tab0.clear()
-        self.directors_tab0.clear()
+    def clear_(self, tab: int):
+        """Очистка всей информации о фильме, записанная внутри класса, и всех полей"""
+        if tab == 0:
+            film_info = self.film_info_tab0 = FILM_INFO_TAB0.copy()
+        if tab == 1:
+            film_info = self.film_info_tab1 = FILM_INFO_TAB1.copy()
+        film_info['directors'], film_info['sessions'] = list(), dict()
 
-    def clear_fields(self):
-        """
-        Очещение всех полей
-        """
-        for line in self.LinesTab0:
-            line.setStyleSheet(f'background-color: {self.NORMAL_COLOR}')
-            line.setText('')
-        for plaintext in self.PlainTextsTab0:
-            plaintext.setPlainText('')
-            plaintext.setStyleSheet(f'background-color: {self.NORMAL_COLOR}')
+        for field in getattr(self, f'LinesTab{tab}') + getattr(self, f'PlainTextsTab{tab}'):
+            field.clear()
 
-        self.AgeRatingSpinBoxTab0.setValue(0)
-        self.DurationSpinBoxTab0.setValue(30)
+        getattr(self, f'AgeRatingSpinBoxTab{tab}').setValue(MIN_AGE_RATING)
+        getattr(self, f'DurationSpinBoxTab{tab}').setValue(MIN_DURATION)
 
-        # self.load_directors_table()
-        self.load_sessions_table()
+        error_label = getattr(self, f'ErrorLabelTab{tab}')
+        error_label.clear()
+        error_label.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
 
-        self.SessionsErrorLabelTab0.setText('')
-        self.SessionsErrorLabelTab0.setStyleSheet(f'background-color: {self.NORMAL_COLOR}')
+        self.load_genres_table(tab)
+        self.load_directors_table(tab)
+        self.load_sessions_table(tab)
 
-        self.ImageErrorLabelTab0.setText('')
-        self.ImageLabelTab0.clear()
+        self.delete_image(tab)
 
-    @staticmethod
-    def transcription_name_into_english(name: str):
-        """
-        Перевод русских слов на английскую транскрипцию для удобного хранения
-        """
-        name = name.strip()
-        dictionary = {'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z',
-                      'и': 'i', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
-                      'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
-                      'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'u', 'я': 'ja', 'a': 'a', 'b': 'b', 'c': 'c',
-                      'd': 'd', 'e': 'e', 'f': 'f', 'g': 'g', 'h': 'h', 'i': 'i', 'j': 'j', 'k': 'k', 'l': 'l',
-                      'm': 'm', 'n': 'n', 'o': 'o', 'p': 'p', 'q': 'q', 'r': 'r', 's': 's', 't': 't', 'u': 'u',
-                      'v': 'v', 'w': 'w', 'x': 'x', 'y': 'y', 'z': 'z', '0': '0', '1': '1', '2': '2', '3': '3',
-                      '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9'}
-        eng_name = ''
-        for i in name:
-            if i.lower() in dictionary:
-                eng_name += dictionary[i.lower()].capitalize() if i.isupper() else dictionary[i]
-            else:
-                eng_name += ' '
-        eng_name = eng_name.strip()
-        eng_name = ''.join(map(lambda x: x.capitalize(), eng_name.split()))
-        return eng_name
+        if tab == 1:
+            self.tab1_editable = False
+            self.set_tab1_edit()
 
     def closeEvent(self, event):
         self.projectDB.close()

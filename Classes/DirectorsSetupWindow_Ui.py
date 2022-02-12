@@ -17,9 +17,6 @@ class DirectorSetupDialog(QDialog):
         self.index = index
         self.director_info = (name, surname)
 
-        self.error_color = '#ff5133'
-        self.normal_line_color = '#ffffff'
-        self.normal_window_color = '#f0f0f0'
         self.error_messages = ['Заполните поле с именем', 'Заполните поле с фамилией',
                                'Заполните поля с именем и фамилией']
 
@@ -95,7 +92,7 @@ class DirectorSetupDialog(QDialog):
         return mistakes
 
     def get_director(self):
-        return tuple(map(lambda l: ' '.join(map(lambda t: t.capitalize(), l.text().split())), self.lines))
+        return tuple(map(lambda l: ' '.join(map(lambda t: t.capitalize(), l.text().strip().split())), self.lines))
 
     def set_incorrectly_lines(self, indexes: list):
         for i in indexes:
