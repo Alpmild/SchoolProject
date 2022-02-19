@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1100</width>
-    <height>605</height>
+    <height>655</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,8 +55,8 @@
      <rect>
       <x>320</x>
       <y>20</y>
-      <width>761</width>
-      <height>533</height>
+      <width>835</width>
+      <height>587</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout">
@@ -84,7 +84,7 @@
         <string notr="true">background-color: rgb(240, 240, 240);</string>
        </property>
        <property name="text">
-        <string>Название</string>
+        <string/>
        </property>
        <property name="frame">
         <bool>false</bool>
@@ -118,7 +118,7 @@
         <string notr="true">background-color: rgb(240, 240, 240);</string>
        </property>
        <property name="text">
-        <string>Страна</string>
+        <string/>
        </property>
        <property name="frame">
         <bool>false</bool>
@@ -152,7 +152,7 @@
         <string notr="true">background-color: rgb(240, 240, 240);</string>
        </property>
        <property name="text">
-        <string>Жанры</string>
+        <string/>
        </property>
        <property name="frame">
         <bool>false</bool>
@@ -263,7 +263,7 @@
         <bool>true</bool>
        </property>
        <property name="plainText">
-        <string>Режиссёры</string>
+        <string/>
        </property>
       </widget>
      </item>
@@ -290,8 +290,7 @@
         <bool>true</bool>
        </property>
        <property name="plainText">
-        <string>Текст
-</string>
+        <string/>
        </property>
       </widget>
      </item>
@@ -312,7 +311,31 @@
        <property name="rightMargin">
         <number>360</number>
        </property>
-       <item row="0" column="1">
+       <item row="0" column="0">
+        <widget class="QPushButton" name="Session0Btn">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>75</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>75</width>
+           <height>75</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
         <widget class="QPushButton" name="Session2Btn">
          <property name="minimumSize">
           <size>
@@ -336,7 +359,31 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
+       <item row="0" column="1">
+        <widget class="QPushButton" name="Session1Btn">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>75</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>75</width>
+           <height>75</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
         <widget class="QPushButton" name="Session3Btn">
          <property name="minimumSize">
           <size>
@@ -432,8 +479,8 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="Session1Btn">
+       <item row="1" column="3">
+        <widget class="QPushButton" name="Session7Btn">
          <property name="minimumSize">
           <size>
            <width>75</width>
@@ -452,7 +499,7 @@
           </font>
          </property>
          <property name="text">
-          <string>1</string>
+          <string>7</string>
          </property>
         </widget>
        </item>

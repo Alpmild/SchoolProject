@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import QTime
 from PyQt5 import uic
 
+from Classes.Consts import SSD_INTERFACE
+
 
 class SessionSetupDialog(QDialog):
     """
@@ -17,7 +19,7 @@ class SessionSetupDialog(QDialog):
         self.hall, self.time_ = hall, time_
         self.index, self.session_id = index, session_id
 
-        uic.loadUi('Interfaces\\SessionSetupDialog.ui', self)
+        uic.loadUi(SSD_INTERFACE, self)
         self.init_ui()
 
     def init_ui(self):

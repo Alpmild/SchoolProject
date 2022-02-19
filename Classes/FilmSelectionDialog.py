@@ -1,13 +1,14 @@
 from datetime import date, time
 from os import getcwd
-from pprint import pprint
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QTableWidgetItem
 from PyQt5 import uic
 
 from Classes.Consts import *
+
 import sqlite3 as sql
+from PyQt5.QtWidgets import QHeaderView
 
 
 class FilmSelectionDialog(QDialog):
@@ -18,7 +19,7 @@ class FilmSelectionDialog(QDialog):
         self.parent = parent
         self.current_film = -1
 
-        self.projectDB = sql.connect('DataBases\\ProjectDataBase.sqlite')
+        self.projectDB = sql.connect(PROJECT_DATABASE)
         self.projectDB_cur = self.projectDB.cursor()
 
         self.films_info = list(map(lambda i: dict(zip(FILMS_TABLE_KEYS, i)),
@@ -60,7 +61,7 @@ class FilmSelectionDialog(QDialog):
             dict_["del_sessions"] = del_sessions
             dict_["image_path"] = f'{getcwd()}\\{dict_["image_path"]}'
 
-        uic.loadUi('Interfaces\\FilmSelectionDialog.ui', self)
+        uic.loadUi(FSD_INTERFACE, self)
         self.init_ui()
         self.load_films_table()
 

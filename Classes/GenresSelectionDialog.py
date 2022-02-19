@@ -2,19 +2,23 @@ import sqlite3 as sql
 from PyQt5.QtWidgets import QDialog
 from PyQt5 import uic
 
+from Classes.Consts import GSD_INTERFACE, PROJECT_DATABASE
+
 
 class GenresSelectionDialog(QDialog):
     """Окно выбора жанров"""
-    def __init__(self, parent, tab: int):
+
+    def __init__(self, parent, tab: int, empty=False):
         super(GenresSelectionDialog, self).__init__(parent)
         self.parent = parent
         self.tab = tab
+        self.empty = empty
 
-        self.db = sql.connect('DataBases\\ProjectDataBase.sqlite')
-        self.cur = self.db.cursor()
-        self.genres = list(map(lambda x: x[0], self.cur.execute("""SELECT title FROM Genres""").fetchall()))
+        self.projectDB = sql.connect(PROJECT_DATABASE)
+        self.projectDB_cur = self.projectDB.cursor()
+        self.genres = list(map(lambda x: x[0], self.projectDB_cur.execute("""SELECT title FROM Genres""").fetchall()))
 
-        uic.loadUi('Interfaces\\GenresSelectionDialog.ui', self)
+        uic.loadUi(GSD_INTERFACE, self)
         self.init_ui()
 
     def init_ui(self):
@@ -25,8 +29,9 @@ class GenresSelectionDialog(QDialog):
         for genre in self.genres:
             self.GenresListWidget.addItem(genre)
 
-        self.set_btn_status()
-        self.GenresListWidget.itemPressed.connect(self.set_btn_status)
+        if not self.empty:
+            self.set_btn_status()
+            self.GenresListWidget.itemPressed.connect(self.set_btn_status)
 
         self.ConfirmSelectionBtn.clicked.connect(self.set_genres)
 
@@ -36,7 +41,6 @@ class GenresSelectionDialog(QDialog):
 
     def set_genres(self):
         """Установка жанров при нажатии на кнопку и закрытие самого диалогового окна"""
-
         self.parent.set_genres(self.get_selected_genres(), self.tab)
         self.close()
 
@@ -45,12 +49,9 @@ class GenresSelectionDialog(QDialog):
         selected_genres = []
         for genre in map(lambda i: i.text(), self.GenresListWidget.selectedItems()):
             try:
-                selected_genres.append(self.cur.execute("""SELECT genre_id FROM Genres WHERE title = ?""",
-                                                        (genre,)).fetchone()[0])
+                selected_genres.append(self.projectDB_cur.execute("""SELECT genre_id FROM Genres WHERE title = ?""",
+                                                                  (genre,)).fetchone()[0])
             except TypeError:
                 continue
 
         return selected_genres
-
-    def closeEvent(self, event):
-        self.db.close()
