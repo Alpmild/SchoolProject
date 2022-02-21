@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QPushButton
 from PyQt5 import uic
 
 from Classes.TabDialog import TabDialog
@@ -44,7 +44,8 @@ class HallDialog(QDialog):
             (self.Btn70, self.Btn71, self.Btn72, self.Btn73, self.Btn74, self.Btn75, self.Btn76, self.Btn77, self.Btn78,
              self.Btn79, self.Btn710, self.Btn711, self.Btn712, self.Btn713),
             (self.Btn80, self.Btn81, self.Btn82, self.Btn83, self.Btn84, self.Btn85, self.Btn86, self.Btn87, self.Btn88,
-             self.Btn89, self.Btn810, self.Btn811, self.Btn812, self.Btn813)]
+             self.Btn89, self.Btn810, self.Btn811, self.Btn812, self.Btn813)
+        ]
         self.ordered_places = []
         self.init_ui()
 
@@ -53,12 +54,11 @@ class HallDialog(QDialog):
         self.setFixedSize(self.size())
         self.setModal(True)
 
-        self.BuyBtn.clicked.connect(self.buy_tickets)
         purchased_seats = self.projectDB_cur.execute("SELECT row, column FROM Tickets WHERE session_id = ?",
                                                      (self.session_id,)).fetchall()
         for row, buttons_list in enumerate(self.place_buttons):
             for col, button in enumerate(buttons_list):
-                self.close_the_place(row, col, (row, col) in purchased_seats)
+                self.close_the_place(button, row, col, (row, col) in purchased_seats)
 
         self.set_btn_status()
         self.BuyBtn.clicked.connect(self.buy_tickets)
@@ -66,14 +66,14 @@ class HallDialog(QDialog):
     def set_btn_status(self):
         self.BuyBtn.setEnabled(bool(self.ordered_places))
 
-    def close_the_place(self, row: int, col: int, place_is_taken: bool):
+    def close_the_place(self, button: QPushButton, row: int, col: int, place_is_taken: bool):
         """
         Красным закрашивуются уже ранее купленный места, а остальные при нажатие добавляются в заказ
         """
         if place_is_taken:
-            self.place_buttons[row][col].setStyleSheet(f'background-color: {OCCUPIED_COLOR}')
+            button.setStyleSheet(f'background-color: {OCCUPIED_COLOR}')
         else:
-            self.place_buttons[row][col].clicked.connect(lambda: self.order_place(row, col))
+            button.clicked.connect(lambda: self.order_place(row, col))
 
     def order_place(self, row: int, col: int):
         """
@@ -83,9 +83,10 @@ class HallDialog(QDialog):
             self.ordered_places.remove((row, col))
             self.place_buttons[row][col].setStyleSheet(f'background-color: {NORMAL_WINDOW_COLOR}')
         else:
-            if len(self.ordered_places) <= MAX_BUY_PLACES:
+            if len(self.ordered_places) < MAX_BUY_PLACES:
                 self.ordered_places.append((row, col))
                 self.place_buttons[row][col].setStyleSheet(f'background-color: {ORDER_COLOR}')
+        print(self.ordered_places)
 
         self.set_btn_status()
 

@@ -1,7 +1,7 @@
 from Classes.Consts import TRANSCRIPTION
 
 
-def transcription_name_into_english(name: str):
+def transcription_title_into_english(name: str):
     """Перевод русских слов на английскую транскрипцию для удобного хранения"""
     name = name.strip()
     eng_name = ''

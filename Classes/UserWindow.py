@@ -8,7 +8,6 @@ from Classes.GenresSelectionDialog import GenresSelectionDialog
 
 from datetime import date, time, datetime
 import sqlite3 as sql
-from pprint import pprint
 
 from PyQt5.QtWidgets import QHeaderView
 
@@ -21,7 +20,7 @@ class UserWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.FilmWindow = None
-        self.GenresDialog = GenresSelectionDialog(self, 0, True)
+        self.GenresDialog = GenresSelectionDialog(self, 0)
 
         self.films, self.right_films = [], []
 
@@ -106,8 +105,6 @@ class UserWindow(QMainWindow):
     def load_films_table(self):
         """Загрузка таблицы в зависимости от даты"""
         self.set_right_films()
-        pprint(self.search_info)
-        pprint(self.right_films)
 
         self.FilmsTable.clearContents()
         self.FilmsTable.setRowCount(len(self.right_films))
@@ -186,6 +183,12 @@ class UserWindow(QMainWindow):
         """Открытия окна фильма со всей информацией"""
         date_ = self.Calendar.selectedDate()
         date_ = date(date_.year(), date_.month(), date_.day())
+
+        try:
+            self.FilmWindow.close()
+            self.FilmWindow = None
+        except AttributeError:
+            pass
 
         self.FilmWindow = FilmWindow(self.right_films[row_ind], date_)
         self.FilmWindow.show()

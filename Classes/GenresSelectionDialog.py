@@ -8,11 +8,10 @@ from Classes.Consts import GSD_INTERFACE, PROJECT_DATABASE
 class GenresSelectionDialog(QDialog):
     """Окно выбора жанров"""
 
-    def __init__(self, parent, tab: int, empty=False):
+    def __init__(self, parent, tab: int):
         super(GenresSelectionDialog, self).__init__(parent)
         self.parent = parent
         self.tab = tab
-        self.empty = empty
 
         self.projectDB = sql.connect(PROJECT_DATABASE)
         self.projectDB_cur = self.projectDB.cursor()
@@ -29,15 +28,7 @@ class GenresSelectionDialog(QDialog):
         for genre in self.genres:
             self.GenresListWidget.addItem(genre)
 
-        if not self.empty:
-            self.set_btn_status()
-            self.GenresListWidget.itemPressed.connect(self.set_btn_status)
-
         self.ConfirmSelectionBtn.clicked.connect(self.set_genres)
-
-    def set_btn_status(self):
-        """Установка статуса кнопки: если выбран хотя бы 1 элемент в таблице, то кнопку возможно нажать, иначе - нет"""
-        self.ConfirmSelectionBtn.setEnabled(bool(self.GenresListWidget.selectedItems()))
 
     def set_genres(self):
         """Установка жанров при нажатии на кнопку и закрытие самого диалогового окна"""

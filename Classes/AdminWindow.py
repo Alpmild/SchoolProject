@@ -13,19 +13,32 @@ from Classes.DirectorsSetupDialog import DirectorSetupDialog
 from Classes.FilmSelectionDialog import FilmSelectionDialog
 from Classes.GenresSelectionDialog import GenresSelectionDialog
 from Classes.SessionSetupDailog import SessionSetupDialog
-from Classes.Secondary_functions import transcription_name_into_english
+from Classes.Secondary_functions import transcription_title_into_english
 
 import sqlite3 as sql
 
 
 class AdminWindow(QTabWidget):
-    """Основное окно админа, где можно добавлять, изменять и удалять фильмы"""
+    """Основное окно админа, где можно добавлять и изменять фильмы"""
 
     def __init__(self):
         super().__init__()
+        """
+        self.film_info(0-1) - словари, в которых содержится информация о фильме, 
+        который редактируется на одной их страниц
+        self.director_dialog - диалогове окно, через которое добавляют или изменяют режиссера
+        self.session_dialog - диалогове окно, через которое добавляют или изменяют сеанс
+        self.tab1_editable - возможность редактирования информации во вкладке Tab1 (True - да, False - нет)
+        
+        self.projectDB - БД, куда записывается или изменяется информация
+        self.projectDB_cur - инструмент, с помощью которого записываем или изменяем информацию в БД
+        
+        self.LinesTab(0-1) - кортеджи с элементами типа QLineEdit
+        self.PlainTextsTab(0-1) - кортеджи с элементами типа QPlainTextEdit
+        self.SpinBoxesTab(0-1) - кортеджи с элементами типа QSpinBox
+        self.selected_date_tab(0-1) - даты типа datetime.date, к-ые соответсвуют выбранным датам в self.CalendarTab(0-1)
+        """
         self.film_info_tab0, self.film_info_tab1 = AW_FILM_INFO_TAB0.copy(), AW_FILM_INFO_TAB1.copy()
-        self.directors_tab0, self.directors_tab1 = [], []
-        self.sessions_tab0, self.sessions_tab1 = dict(), dict()
 
         self.director_dialog, self.session_dialog = None, None
         self.tab1_editable = False
@@ -59,7 +72,7 @@ class AdminWindow(QTabWidget):
         self.set_tab1_edit()
 
     def init_tab_ui(self, tab: int):
-        """Инициализация для вкладки tab"""
+        """Инициализация для вкладки с индексом tab"""
         ws = [
             [getattr(self, f'GenresTableTab{tab}'), AW_GENRES_TABLE_COLS_COUNT,
              AW_GENRES_TABLE_COLS_TITLES, AW_GENRES_TABLE_COLS_SIZE],
@@ -122,19 +135,20 @@ class AdminWindow(QTabWidget):
 
     def set_value(self, tab: int, key, t: type):
         """
-        Изменение цвета поля при введении текста
+        1) Изменение стиля поля ErrorLabelTab{tab} при вызове метода;
+        2) Запись значения поля в словарь self.film_info_tab{tab} под ключом key.
         """
         error_label = getattr(self, f'ErrorLabelTab{tab}')
         if self.sender().styleSheet() != NORMAL_LINE_COLOR:
             self.sender().setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
         if error_label.styleSheet() != NORMAL_WINDOW_COLOR:
             error_label.clear()
-            error_label.setStyleSheet(f'background-color: {NORMAL_WINDOW_COLOR}')
+            error_label.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
 
         if t == str and isinstance(self.sender(), QPlainTextEdit):
-            value = ' '.join(self.sender().toPlainText().strip().split())
+            value = ' '.join(self.sender().toPlainText().split())
         elif t == str and isinstance(self.sender(), QLineEdit):
-            value = ' '.join(self.sender().text().strip().split())
+            value = ' '.join(self.sender().text().split())
         elif t == int and isinstance(self.sender(), QSpinBox):
             value = self.sender().value()
         else:
@@ -144,7 +158,8 @@ class AdminWindow(QTabWidget):
 
     def open_genres_dialog(self, tab: int):
         """
-        Открытие диалога для выбора жанров
+        1) Изменение стиля поля ErrorLabelTab{tab} при вызове метода;
+        2) Открытие диалога для выбора жанров во вкладке под индексом tab.
         """
         getattr(self, f'GenresTableTab{tab}').setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
 
@@ -153,12 +168,16 @@ class AdminWindow(QTabWidget):
             genres_dialog.show()
 
     def set_genres(self, genres: list, tab: int):
-        """Получение списка с жанрами"""
+        """Запись списка с id жанров в self.film_info_tab{tab}"""
 
         getattr(self, f'film_info_tab{tab}')['genres'] = genres
         self.load_genres_table(tab)
 
     def load_genres_table(self, tab: int):
+        """
+        Загрузка списка жанров film_info_tab{tab}['genres'] в таблицу self.GenresTableTab{tab}
+        """
+
         genres_list = getattr(self, f'film_info_tab{tab}')['genres']
         genres_table = getattr(self, f'GenresTableTab{tab}')
 
@@ -174,7 +193,7 @@ class AdminWindow(QTabWidget):
 
     def open_director_setup_dialog(self, tab: int, change=False):
         """
-        Открыввется окно для добавления режиссера
+        Открытие диалога self.director_dialog (DirectorSetupDialog)
         """
         table = getattr(self, f'DirectorsTableTab{tab}')
         table.setStyleSheet(f'background-color: {NORMAL_LINE_COLOR}')
@@ -188,16 +207,15 @@ class AdminWindow(QTabWidget):
             else:
                 self.director_dialog = DirectorSetupDialog(self, tab)
 
-            table.setCurrentCell(40, 40)
+            table.setCurrentCell(99, 99)
             try:
                 self.director_dialog.show()
             except AttributeError:
                 return
 
     def set_director(self, tab: int, ind: int, director: tuple):
-        """
-        Добавление режиссера в список, максимум self.MAX_DIRECTORS
-        """
+        """Добавление или установка кортеджа с информакцией о режиссере в список self.film_info_tab{tab}['directors']"""
+
         director_list = getattr(self, f'film_info_tab{tab}')['directors']
         if ind != -1:
             director_list[ind] = director
@@ -208,9 +226,8 @@ class AdminWindow(QTabWidget):
         self.load_directors_table(tab)
 
     def delete_director(self, tab: int):
-        """
-        Удаление выбранного режиссёра, который человек выбирает в таблице DirectorsTableTab0
-        """
+        """Удаление режиссера из списка self.film_info_tab{tab}['directors'] под индексом row """
+
         directors_list = getattr(self, f'film_info_tab{tab}')['directors']
         row = getattr(self, f'DirectorsTableTab{tab}').currentRow()
 
@@ -221,9 +238,8 @@ class AdminWindow(QTabWidget):
         self.load_directors_table(tab)
 
     def load_directors_table(self, tab: int):
-        """
-        Загрузка таблицы с режиссёрами
-        """
+        """Загрузка списка режиссеров film_info_tab{tab}['directors'] в таблицу self.DirectorsTableTab{tab}"""
+
         directors_table = getattr(self, f'DirectorsTableTab{tab}')
         directors_list = getattr(self, f'film_info_tab{tab}')['directors']
 
@@ -238,9 +254,8 @@ class AdminWindow(QTabWidget):
                 directors_table.setItem(row, col, item)
 
     def open_session_setup_dialog(self, tab: int, change=False):
-        """
-        Открытие окна, для добавления сеанса
-        """
+        """Открытие диалога self.session_dialog (SessionSetupDialog)"""
+
         selected_date = getattr(self, f'selected_date_tab{tab}')
         table = getattr(self, f'SessionsTableTab{tab}')
 
@@ -267,9 +282,8 @@ class AdminWindow(QTabWidget):
             self.session_dialog.show()
 
     def set_session(self, tab: int, date_: date, time_: time, hall: int, index: int, session_id: int):
-        """
-        Добавление сенса в определенный день
-        """
+        """Добавление сенса в определенный день"""
+
         sessions = getattr(self, f'film_info_tab{tab}')['sessions']
         if index == -1:
             if date_ not in sessions:
@@ -427,10 +441,11 @@ class AdminWindow(QTabWidget):
 
     def confirm_info_press(self, tab: int):
         """Подтвеждение введенной информации"""
-        if self.info_verification(tab):
-            self.filling_data(tab)
-        else:
-            self.specifying_invalid_fields(tab)
+        if tab == 0 or (tab == 1 and self.tab1_editable):
+            if self.info_verification(tab):
+                self.filling_data(tab)
+            else:
+                self.specifying_invalid_fields(tab)
 
     def info_verification(self, tab: int):
         """Проверка данных"""
@@ -492,7 +507,7 @@ class AdminWindow(QTabWidget):
         title, country, rating, duration, image_path = \
             (film_info['title'], film_info['country'], film_info['rating'],
              film_info['duration'], film_info['image_path'])
-        file_folder_name = transcription_name_into_english(film_info['title'])
+        file_folder_name = transcription_title_into_english(film_info['title'])
 
         if tab == 0:
             description_file_name, image_name = (f'Films\\{file_folder_name}\\{file_folder_name}Description.txt',
