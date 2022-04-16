@@ -1,7 +1,7 @@
 from sys import argv, exit
 from PyQt5.QtWidgets import QApplication
 
-from Classes.AdminWindow import AdminWindow
+from data.AdminWindow import AdminWindow
 
 
 if __name__ == '__main__':

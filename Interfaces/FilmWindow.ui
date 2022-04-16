@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1100</width>
+    <width>1162</width>
     <height>655</height>
    </rect>
   </property>
@@ -55,8 +55,8 @@
      <rect>
       <x>320</x>
       <y>20</y>
-      <width>835</width>
-      <height>587</height>
+      <width>821</width>
+      <height>591</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout">
@@ -513,7 +513,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1100</width>
+     <width>1162</width>
      <height>21</height>
     </rect>
    </property>

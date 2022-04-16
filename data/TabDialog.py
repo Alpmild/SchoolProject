@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QDialog
 from PyQt5 import uic
 
-from Classes.Consts import TD_INTERFACE
+from data.Consts import TD_INTERFACE
 
 
 class TabDialog(QDialog):
@@ -27,4 +27,4 @@ class TabDialog(QDialog):
                                         f'Ваш заказ:\n'
                                         f'{ordered_places}\n'
                                         f'\n'
-                                        f'Спасибо за покупку :)')
+                                        f'Спасибо, что быбрали нас :)')

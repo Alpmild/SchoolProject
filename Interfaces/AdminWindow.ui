@@ -1108,11 +1108,6 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QWidget" name="Tab2">
-   <attribute name="title">
-    <string>Удалить</string>
-   </attribute>
-  </widget>
  </widget>
  <resources/>
  <connections/>

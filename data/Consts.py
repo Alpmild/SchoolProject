@@ -46,7 +46,7 @@ UW_FILMS_TABLE_COLS_SIZE = (300, 250, 300, QHeaderView.Stretch, QHeaderView.Stre
 
 # __________NUMBERS___________
 MIN_DATE = datetime.now().date()
-MAX_DATE = MIN_DATE + timedelta(days=30)
+MAX_DATE = MIN_DATE + timedelta(days=730)
 
 MIN_AGE_RATING = 0
 MIN_DURATION = 30

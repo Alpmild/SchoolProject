@@ -2,9 +2,9 @@ from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtWidgets import QTableWidgetItem, QMainWindow
 from PyQt5 import uic
 
-from Classes.Consts import *
-from Classes.FilmWindow import FilmWindow
-from Classes.GenresSelectionDialog import GenresSelectionDialog
+from data.Consts import *
+from data.FilmWindow import FilmWindow
+from data.GenresSelectionDialog import GenresSelectionDialog
 
 from datetime import date, time, datetime
 import sqlite3 as sql

@@ -2,7 +2,7 @@ import sqlite3 as sql
 from PyQt5.QtWidgets import QDialog
 from PyQt5 import uic
 
-from Classes.Consts import GSD_INTERFACE, PROJECT_DATABASE
+from data.Consts import GSD_INTERFACE, PROJECT_DATABASE
 
 
 class GenresSelectionDialog(QDialog):

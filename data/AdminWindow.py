@@ -8,12 +8,12 @@ from PyQt5.QtWidgets import QTabWidget, QFileDialog, QTableWidgetItem, QLineEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
-from Classes.Consts import *
-from Classes.DirectorsSetupDialog import DirectorSetupDialog
-from Classes.FilmSelectionDialog import FilmSelectionDialog
-from Classes.GenresSelectionDialog import GenresSelectionDialog
-from Classes.SessionSetupDailog import SessionSetupDialog
-from Classes.Secondary_functions import transcription_title_into_english
+from data.Consts import *
+from data.DirectorsSetupDialog import DirectorSetupDialog
+from data.FilmSelectionDialog import FilmSelectionDialog
+from data.GenresSelectionDialog import GenresSelectionDialog
+from data.SessionSetupDailog import SessionSetupDialog
+from data.Secondary_functions import transcription_title_into_english
 
 import sqlite3 as sql
 
@@ -317,6 +317,8 @@ class AdminWindow(QTabWidget):
         if ind == -1:
             return
 
+        del sessions[selected_date][ind]
+
         if not sessions[selected_date]:
             del sessions[selected_date]
 
@@ -380,7 +382,7 @@ class AdminWindow(QTabWidget):
             path_to_image = path_to_image.replace('/', '\\')
             getattr(self, f'film_info_tab{tab}')['image_path'] = path_to_image
 
-        if not path_to_image:
+        if not path_to_image or not os.path.exists(path_to_image):
             return
 
         image = QPixmap(path_to_image)
@@ -555,6 +557,11 @@ class AdminWindow(QTabWidget):
             last_file_folder_name, last_description_file_name, last_image_path = self.projectDB_cur.execute(
                 "SELECT file_folder_name, description_file_name, image_name FROM Films"
                 "    WHERE film_id = ?", (film_id,)).fetchone()
+            if last_file_folder_name != file_folder_name and\
+                    (file_folder_name,) in self.projectDB_cur.execute('SELECT file_folder_name FROM Films').fetchall():
+                self.ErrorLabelTab1.setText('Этот фильм уже есть в базе.')
+                self.ErrorLabelTab1.setStyleSheet(f'background-color: {ERROR_COLOR}')
+                return
 
             # Создание папки со старым именем, если ее нет
             if not os.path.exists(f'Films\\{last_file_folder_name}'):
@@ -563,19 +570,20 @@ class AdminWindow(QTabWidget):
             # Запись описания
             with open(last_description_file_name, 'w') as desc_file:
                 desc_file.write(film_info['description'])
-            os.rename(last_description_file_name,
-                      f'Films\\{last_file_folder_name}\\{file_folder_name}Description.txt')
+            os.rename(
+                last_description_file_name,  f'Films\\{last_file_folder_name}\\{file_folder_name}Description.txt')
 
             # Сохранение изображения
             last_image_path = f'{os.getcwd()}\\{last_image_path}'
             if film_info['image_path'] == last_image_path:
                 os.rename(last_image_path, f'Films\\{last_file_folder_name}\\{file_folder_name}Image.png')
             else:
+                if os.path.exists(last_image_path):
+                    os.remove(last_image_path)
+
                 image = Image.open(image_path)
                 new_image = image.resize((IMAGE_WIDTH, IMAGE_HEIGHT))
                 new_image.save(f'Films\\{last_file_folder_name}\\{file_folder_name}Image.png')
-
-                os.remove(last_image_path)
 
             # Переименование старой папки
             os.rename(f'Films\\{last_file_folder_name}', f'Films\\{file_folder_name}')

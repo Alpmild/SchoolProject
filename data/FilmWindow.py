@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 
-from Classes.Consts import PROJECT_DATABASE, FW_INTERFACE, GENRES_DICT, MAX_SESSIONS
-from Classes.HallDialog import HallDialog
+from data.Consts import PROJECT_DATABASE, FW_INTERFACE, GENRES_DICT, MAX_SESSIONS
+from data.HallDialog import HallDialog
 
 import sqlite3 as sql
 

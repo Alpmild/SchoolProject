@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import QTime
 from PyQt5 import uic
 
-from Classes.Consts import SSD_INTERFACE
+from data.Consts import SSD_INTERFACE
 
 
 class SessionSetupDialog(QDialog):

@@ -1,4 +1,4 @@
-from Classes.Consts import TRANSCRIPTION
+from data.Consts import TRANSCRIPTION
 
 
 def transcription_title_into_english(name: str):

@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QDialog, QPushButton
 from PyQt5 import uic
 
-from Classes.TabDialog import TabDialog
-from Classes.Consts import (PROJECT_DATABASE, HD_INTERFACE, OCCUPIED_COLOR,
+from data.TabDialog import TabDialog
+from data.Consts import (PROJECT_DATABASE, HD_INTERFACE, OCCUPIED_COLOR,
                             NORMAL_WINDOW_COLOR, MAX_BUY_PLACES, ORDER_COLOR)
 
 import sqlite3 as sql

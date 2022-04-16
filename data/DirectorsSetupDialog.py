@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QDialog
 from PyQt5 import uic
 
-from Classes.Consts import ERROR_COLOR, DSD_INTERFACE, NORMAL_LINE_COLOR, NORMAL_WINDOW_COLOR
+from data.Consts import ERROR_COLOR, DSD_INTERFACE, NORMAL_LINE_COLOR, NORMAL_WINDOW_COLOR
 
 
 class DirectorSetupDialog(QDialog):
@@ -18,8 +18,8 @@ class DirectorSetupDialog(QDialog):
         self.index = index
         self.director_info = (name, surname)
 
-        self.error_messages = ['В имени не должны содержатся цифры',
-                               'В фамилии не должны содержатся цифры',
+        self.error_messages = ['В имени должны быть только буквы',
+                               'В фамилии должны быть только буквы',
                                'Корректно заполните данные']
 
         uic.loadUi(DSD_INTERFACE, self)

@@ -1,7 +1,7 @@
 from sys import argv, exit
 from PyQt5.QtWidgets import QApplication
 
-from Classes.UserWindow import UserWindow
+from data.UserWindow import UserWindow
 
 
 if __name__ == '__main__':
